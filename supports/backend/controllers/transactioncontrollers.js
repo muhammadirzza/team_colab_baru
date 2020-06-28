@@ -195,11 +195,12 @@ module.exports={
         console.log(req.query, 'line 91')
         const {userId, status} = req.query
         const iduser = parseInt(userId)
-        var sql = `select t.*, td.*, p.name, p.image, p.price, p.description, p.stock, a.author, b.weight, b.publisher from transactions t 
+        var sql = `select t.*, td.*, p.name, p.image, p.price, p.description, p.stock, a.author, b.weight, b.publisher, d.discount_rate from transactions t 
                         join transactiondetails td on t.idtransaction=td.idtransaction
                         join products p on td.idproduct=p.idproduct
                         join authors a on p.author_id=a.author_id
                         join booksformat b on p.format_id=b.format_id
+                        left join discounts d on p.discount_id=d.discount_id
                         where t.isdeleted=0 and t.status='${status}' and td.isdeleted=0 and t.iduser=${iduser}`
         db.query(sql, (err,result) => {
             if (err) res.status(500).send(err)
@@ -295,14 +296,28 @@ module.exports={
         }
         db.query(sql, data, (err, resupdate)=>{
             if (err) res.status(500).send(err)
-            var sql = `select t.idtransaction, t.iduser, u.email from transactions t 
+            var sql = `select t.idtransaction, t.iduser, t.totalpay, u.email, u.username from transactions t 
                         join users u on u.iduser=t.iduser
                         where t.isdeleted=0 and t.status='waitingupload' and t.idtransaction=${id} and t.iduser=${iduser};`
             db.query(sql, (err, reselect)=>{
                 if (err) res.status(500).send(err)
                 console.log(reselect, 'transactioncontrollers 296')
-                const token=createJWTToken({idtransaction:id, email:reselect[0].email, iduser:reselect[0].iduser })    //buat token
-                res.status(200).send({status:true,token})
+                transporter.sendMail({
+                    from:'Checkout <irzza.pwdk@gmail.com>',
+                        to:reselect[0].email,
+                        subject:'Checkout',
+                        html:`<div style="height:50vh; display:flexbox; justify-content:center; align-items:center;">
+                                <div style="display:flexbox; justify-content:center; align-items:flex-start; flex-direction:column; width:30%; border:2px solid #281e5a; border-radius:10px; height:200px; padding-left:10px;padding-right:10px; ">
+                                    <h1 style="color:#281e5a; text-align:left; font-weight:bold; ">Verify Your Email</h1>
+                                    <h4 style="color:#281e5a; text-align:left; ">Hi ${reselect[0].username} ! kamu telah melakukan checkout</h4>                   
+                                    <h4 style="color:#281e5a; text-align:left; ">harap mealakukan pembayaran sebesar Rp ${reselect[0].totalpay} </h4>
+                                </div>
+                            </div>`,
+                },(err, resultsend) => {
+                    if(err) return res.status(500).send(err)    //kalau sqlnya error maka send err
+                    const token=createJWTToken({idtransaction:id, email:reselect[0].email, iduser:reselect[0].iduser })    //buat token
+                    res.status(200).send({status:true,token})
+                })
             })
         })
     },
@@ -331,8 +346,12 @@ module.exports={
                         // if(imagePath) {
                         //     image:imagePath
                         // }
-                        sql = `Update transactions set image='${imagePath}' where idtransaction=${id}`
-                        db.query(sql,(err1,result1)=>{
+                        let data = {
+                            image:imagePath,
+                            status:'verification'
+                        }
+                        sql = `Update transactions set ? where idtransaction=${id}`
+                        db.query(sql,data, (err1,result1)=>{
                             if(err1) {      //kalau gagal foto gajadi di upload
                                 if(imagePath) {
                                     fs.unlinkSync('./public' + imagePath)
@@ -378,7 +397,7 @@ module.exports={
 
     userHistory: (req, res) => {
         const {id}=req.params
-        var sql= `  SELECT t.idtransaction, t.iduser, t.method, t.status, t.orderdate, t.completedate, t.no_resi
+        var sql= `  SELECT t.idtransaction, t.iduser, t.method, t.status, t.orderdate, t.completedate, t.no_resi, t.image as imagetrans
                     FROM transactions t
                         JOIN transactiondetails td
                         ON t.idtransaction=td.idtransaction
@@ -390,12 +409,13 @@ module.exports={
             if (err) res.status(500).send({err,message:'error get transaction history'})
             var arr=[]
             result.forEach(element => {
-                arr.push(queryAsync(`   SELECT td.idtransactiondetail, td.idtransaction, td.qty, p.name, p.image, p.price
+                arr.push(queryAsync(`   SELECT td.idtransactiondetail, td.idtransaction, td.qty, p.name, p.image, p.price, d.discount_rate
                                         FROM transactions t
                                             JOIN transactiondetails td
                                             ON t.idtransaction=td.idtransaction
                                             JOIN products p
                                             ON td.idproduct=p.idproduct
+                                            LEFT JOIN discounts d ON p.discount_id=d.discount_id
                                         WHERE t.idtransaction=${element.idtransaction} AND td.isdeleted=0;`))
             });
             Promise.all(arr)
@@ -425,7 +445,7 @@ module.exports={
 
     gettransactiondetail:(req,res)=>{
         const {idtrans}=req.params
-        var sql=`    SELECT t.idtransaction, p.name,p.image,p.price, p.idproduct AS productid,td.qty,td.idtransactiondetail, t.status, t.method, t.ccnumber
+        var sql=`    SELECT t.idtransaction, p.name,p.image,p.price, p.idproduct AS productid,td.qty,td.idtransactiondetail, t.status, t.method, t.ccnumber, d.discount_rate
                         FROM transactions t
                             JOIN transactiondetails td
                             ON t.idtransaction=td.idtransaction
@@ -433,6 +453,7 @@ module.exports={
                             ON td.idproduct=p.idproduct
                             JOIN users u
                             ON u.iduser=t.iduser
+                            LEFT JOIN discounts d ON p.discount_id=d.discount_id
                         WHERE td.idtransaction = ${idtrans} AND td.isdeleted=0`
         db.query(sql,(err,result)=>{
             if (err) res.status(500).send({err,message:'error get transaction detail'})
@@ -447,10 +468,81 @@ module.exports={
             completedate: new Date()
         }
         var sql=`   UPDATE transactions SET ?  
-                    WHERE id=${transactionid}`
+                    WHERE idtransaction=${idtrans}`
         db.query(sql,data,(err,result)=>{
             if (err) res.status(500).send({err,message:'error verifypayment'})
             res.status(200).send(result)
         })
     },
+
+    // =====ADMIN====== //
+    getalltransactions:(req,res)=>{
+        var sql= `  SELECT t.idtransaction, t.iduser, t.method, t.status, u.username, t.orderdate, t.shippingdate, t.completedate, t.no_resi, t.image as imagetrans
+                    FROM transactions t
+                        JOIN transactiondetails td
+                        ON t.idtransaction=td.idtransaction
+                        JOIN users u
+                        ON t.iduser=u.iduser
+                    WHERE t.status!='oncart' AND td.isdeleted=0
+                    GROUP BY t.idtransaction 
+                    ORDER BY t.idtransaction DESC`
+        db.query(sql,(err,result)=>{
+            if (err) res.status(500).send({err,message:'error get all transaction id'})
+            console.log(result, 'transactioncontrollers 477')
+            var arr=[]
+            result.forEach(element => {
+                arr.push(queryAsync(`   SELECT td.idtransactiondetail, td.idtransaction, td.qty, p.name, p.image, p.price, d.discount_rate
+                                            FROM transactions t
+                                                JOIN transactiondetails td
+                                                ON t.idtransaction=td.idtransaction
+                                                JOIN products p
+                                                ON td.idproduct=p.idproduct
+                                                LEFT JOIN discounts d ON p.discount_id=d.discount_id
+                                            WHERE t.idtransaction=${element.idtransaction} AND td.isdeleted=0;`))
+            });
+            Promise.all(arr)
+            .then(result1=>{
+                result1.forEach((element,index)=>{
+                    result[index].transactiondetails=element
+                })
+                res.status(200).send(result)
+            })
+        })
+    },
+    
+    verifypayment:(req,res)=>{
+        const {idtrans}=req.params
+        let data = {
+            status:'ondelivery',
+            shippingdate: new Date(),
+            no_resi:req.query.no_resi
+        }
+        var sql=`   UPDATE transactions SET ?  
+                    WHERE idtransaction=${idtrans}`
+        db.query(sql,data, (err,result)=>{
+            var sql = `select t.idtransaction, t.iduser, t.totalpay, t.no_resi, u.email, u.username from transactions t 
+                        join users u on u.iduser=t.iduser
+                        where t.isdeleted=0 and t.status='ondelivery' and t.idtransaction=${idtrans}`
+            db.query(sql, (err, reselectpayment) => {
+                if (err) res.status(500).send({err,message:'error verifypayment'})
+                console.log(reselectpayment, 'transactioncontroller 528')
+                transporter.sendMail({
+                    from:'Delivery <irzza.pwdk@gmail.com>',
+                        to:reselectpayment[0].email,
+                        subject:'Checkout',
+                        html:`<div style="height:50vh; display:flexbox; justify-content:center; align-items:center;">
+                                <div style="display:flexbox; justify-content:center; align-items:flex-start; flex-direction:column; width:30%; border:2px solid #281e5a; border-radius:10px; height:200px; padding-left:10px;padding-right:10px; ">
+                                    <h1 style="color:#281e5a; text-align:left; font-weight:bold; ">Verify Your Email</h1>
+                                    <h4 style="color:#281e5a; text-align:left; ">Hi ${reselectpayment[0].username} ! pesanan kamu sudah dikirim</h4>                   
+                                    <h4 style="color:#281e5a; text-align:left; ">silahkan cek status pengiriman dengan nomor resi ${reselectpayment[0].no_resi} </h4>
+                                </div>
+                            </div>`,
+                }, (err,resultsend) => {
+                    if(err) return res.status(500).send(err)    //kalau sqlnya error maka send err
+                    res.status(200).send(result)
+                })
+            })
+
+        })
+    }
 }

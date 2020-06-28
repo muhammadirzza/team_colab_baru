@@ -20,6 +20,10 @@ router.get('/history/:id', Transactioncontrollers.userHistory)
 router.get('/totalcart/:id', Transactioncontrollers.getTotalCart)
 router.get('/transdetail/:idtrans', Transactioncontrollers.gettransactiondetail)
 router.get('/delivered/:idtrans', Transactioncontrollers.verifydelivered)
+router.get('/alltransaction', Transactioncontrollers.getalltransactions)
+router.get('/paymentapprove/:idtrans', Transactioncontrollers.verifypayment)
+
+
 
 
 

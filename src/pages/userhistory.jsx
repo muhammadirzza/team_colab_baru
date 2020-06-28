@@ -103,12 +103,17 @@ class History extends Component{
                     <td >{index+1}</td>
                     <td >{capitalize(val.name)}</td>
                     <td >
-                        <div className="rounded" style={{height:"221px", width:"152px"}}>
-                            <img src={APIURL+val.image} height="100%" width="100%" alt=""/>
-                        </div>
+                        <img src={APIURL+val.image} height="179px" width="120px" alt=""/>   
                     </td>
                     <td >{val.qty}</td>
-                    <td >{changetoRupiah(val.qty*val.price)}</td>
+                    <td >
+                        {
+                            val.discount_rate ?
+                            changetoRupiah((val.price - (val.discount_rate * val.price / 100))*val.qty) 
+                            :
+                            changetoRupiah(val.price*val.qty)
+                        }
+                    </td>
                 </tr>
             )
         })
@@ -118,7 +123,12 @@ class History extends Component{
         if(!this.state.isLoading){
             let total=0
             this.state.cartdetail.forEach((val)=>{
-                total+=val.qty*val.price
+                if (val.discount_rate) {
+                    total+=(val.price - (val.discount_rate * val.price / 100)) * val.qty               
+                } else {
+                    total+=val.qty*val.price
+                }
+                // total+=val.qty*val.price
             })
             return(
                 <tr style={{verticalAlign:"middle"}}>
@@ -130,50 +140,48 @@ class History extends Component{
         }
     }
 
-    // onConfirmDelivered=(index)=>{
-    //     // console.log(index)
-    //     MySwal.fire({
-    //         title: `Are you sure ${this.state.products[index].tr} is finished ?`,
-    //         text: "Make Sure the Package is Safely Arrived!",
-    //         icon: 'warning',
-    //         showCancelButton: true,
-    //         confirmButtonColor: '#3085d6',
-    //         cancelButtonColor: '#d33',
-    //         confirmButtonText: 'Yes, Confirm it!'
-    //         }).then((result) => {
-    //             console.log(this.state.products[index])
-    //             if (result.value) {
-    //             Axios.patch(`${APIURL}/transactions/${this.state.products[index].id}`,{
-    //                 status:"delivered",
-    //                 date2:today()
-    //             })
-    //             .then((res)=>{
-    //                 MySwal.fire(
-    //                     'Confirmed!',
-    //                     'Your Transaction is finished.',
-    //                     'success'
-    //                 ).then((result)=>{
-    //                     if(result.value){
-    //                         this.componentDidMount()
-    //                         this.toggleadd()
-    //                         // this.props.countCart(this.props.User.id)
-    //                         //   console.log(this.props.User.id)
-    //                     }
-    //                 })
-    //             }).catch((err)=>{
-    //                 console.log(err)
-    //             }) 
-    //             }
-    //         })
-    // }
+    onConfirmDelivered=(index)=>{
+        console.log(index)
+        MySwal.fire({
+            title: "Apakah transaksi anda sudah selesai",
+            text: "Pastikan barang anda sampai dengan selamat!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, Confirm it!'
+            }).then((result) => {
+                console.log(this.state.products[index])
+                if (result.value) {
+                Axios.get(`${APIURL}/transactions/delivered/${this.state.products[index].idtransaction}`,{
+                })
+                .then((res)=>{
+                    MySwal.fire(
+                        'Confirmed!',
+                        'Transaksi anda sudah selesai.',
+                        'success'
+                    ).then((result)=>{
+                        if(result.value){
+                            this.componentDidMount()
+                            this.toggleadd()
+                            // this.props.countCart(this.props.User.id)
+                            //   console.log(this.props.User.id)
+                        }
+                    })
+                }).catch((err)=>{
+                    console.log(err)
+                }) 
+                }
+            })
+    }
 
     render() {
         // if(this.props.User.role===1){
             // if(!this.state.isLoading){
                 return(
                     <div style={{marginTop:"5%"}}>
-                        <Modal isOpen={this.state.isModalOpen} toggle={this.toggleadd}>
-                            <ModalHeader toggle={this.toggleadd}>Modal title</ModalHeader>
+                        <Modal isOpen={this.state.isModalOpen} toggle={this.toggleadd} className="modal-dialog modal-lg">
+                            <ModalHeader toggle={this.toggleadd}>Transaksi Anda</ModalHeader>
                                 <ModalBody>
                                     <Table>
                                     <thead>
@@ -198,15 +206,20 @@ class History extends Component{
                                     </tfoot>
                                     </Table>
                                 </ModalBody>
-                                {/* <ModalFooter>
+                                <ModalFooter>
                                     {
-                                        (this.state.indexedit===-1 || this.state.products[this.state.indexedit].status==='delivered') ?
+                                        (this.state.indexedit===-1 || this.state.products[this.state.indexedit].status==='delivered' || this.state.products[this.state.indexedit].status==='oncart') ?
                                         null
                                         :
                                         <Button className="rounded-pill" color="danger" onClick={() => this.onConfirmDelivered(this.state.indexedit)}>Delivered</Button>
                                     }
-                                    <Button className="rounded-pill" color="#81d4fa light-blue lighten-3" style={{color: 'white'}} onClick={this.toggleadd}>Cancel</Button>{' '}
-                                </ModalFooter> */}
+                                    {
+                                        this.state.indexedit===-1 || this.state.products[this.state.indexedit].status==='waitingupload'?
+                                        <Button className="rounded-pill" color="#81d4fa light-blue lighten-3" style={{color: 'white'}} onClick={this.toggleadd}>Upload Transfer</Button>
+                                        :
+                                        null
+                                    }
+                                </ModalFooter>
                         </Modal>
         
                         <Table striped className="mt-4">

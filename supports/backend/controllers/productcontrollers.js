@@ -616,7 +616,17 @@ module.exports = {
                     where p.isdeleted=0 and p.idcategory=1  order by p.createat limit 5`
             db.query(sql, (err, komik) => {
                 if (err) res.status(500).send(err)
-                return res.send({ novel, komik })
+                // return res.send({ novel, komik })
+                sql = `select p.*,c.idcategory as idcat,c.name as catname, d.discount_rate, a.*, f.* from products p 
+                    join categories c on p.idcategory=c.idcategory
+                    left join discounts d on p.discount_id=d.discount_id
+                    join authors a on p.author_id=a.author_id
+                    join booksformat f on p.format_id=f.format_id
+                    where p.isdeleted=0 order by p.is_seen desc limit 5`
+                db.query(sql, (err, populer) => {
+                    if (err) res.status(500).send(err)
+                    return res.send({ novel, komik, populer })
+                })
             })
         })
     },
@@ -831,45 +841,6 @@ module.exports = {
     // ============= User ============= //
 
     getProductUser:(req,res)=>{
-        // const {page}=req.query
-        // const offset = parseInt((page*8)-8)
-        // console.log(offset)
-
-        // const offset = parseInt((page-1)*8)
-        // console.log(page)
-        // if(search){
-        //     var sql= `  SELECT p.*,c.id AS idcat,c.name AS catnama
-        //                 FROM products p 
-        //                     JOIN category c 
-        //                     ON p.categoryId=c.id
-        //                 WHERE p.isdeleted=0 AND p.name LIKE '%${search}%'
-        //                 LIMIT ${page},8`
-        //     db.query(sql,(err,result)=>{
-        //         if(err) res.status(500).send({err,message:'error get product search'})
-        //         return res.send(result)
-        //     })
-        // }else if(filter){
-        //     var sql= `  SELECT p.*,c.id AS idcat,c.name AS catnama
-        //                 FROM products p 
-        //                     JOIN category c 
-        //                     ON p.categoryId=c.id
-        //                 WHERE p.isdeleted=0 AND p.categoryId=${filter}
-        //                 LIMIT ${page},8`
-        //     db.query(sql,(err,result)=>{
-        //         if(err) res.status(500).send({err,message:'error get total product'})
-        //         return res.send(result)
-        //     })
-        // }else{
-            // var sql= `select p.*,c.idcategory as idcat,c.name as catname,a.*, f.* from products p 
-            //             join categories c on p.idcategory=c.idcategory
-            //             join authors a on p.author_id=a.author_id
-            //             join booksformat f on p.format_id=f.format_id
-            //             where p.isdeleted=0
-            //             LIMIT ${offset},8`
-            // db.query(sql,(err,result)=>{
-            //     if(err) res.status(500).send({err,message:'error get total product'})
-            //     return res.send(result)
-            // })
             const { cat, page, sortname, sortprice}=req.query
             const maxin=parseInt(req.query.inputMax)
             const minin=parseInt(req.query.inputMin)
@@ -879,10 +850,11 @@ module.exports = {
             if(maxin && minin){
                 if(sortname==1) {
                     console.log('masuj sortname asc 301')
-                    var sql= `  select p.*,c.idcategory as idcat,c.name as catname,a.*, f.* from products p 
+                    var sql= `  select p.*,c.idcategory as idcat,c.name as catname,a.*, d.discount_rate, f.* from products p 
                                 join categories c on p.idcategory=c.idcategory
                                 join authors a on p.author_id=a.author_id
                                 join booksformat f on p.format_id=f.format_id
+                                left join discounts d on p.discount_id=d.discount_id
                                 where p.isdeleted=0 AND p.price<=${maxin} AND p.price>=${minin} order by p.name
                                 LIMIT ${page},8`
                                 // p.name LIKE '%${search}%'
@@ -890,23 +862,51 @@ module.exports = {
                         if(err) res.status(500).send({err,message:'error get product search'})
                         return res.send(result)
                     })    
-                } else if(sortname==2) {
+                } else if (sortname==2) {
                     console.log('masuj sortname asc 317')
-                    var sql= `  select p.*,c.idcategory as idcat,c.name as catname,a.*, f.* from products p 
+                    var sql= `  select p.*,c.idcategory as idcat,c.name as catname, d.discount_rate, a.*, f.* from products p 
                                 join categories c on p.idcategory=c.idcategory
                                 join authors a on p.author_id=a.author_id
                                 join booksformat f on p.format_id=f.format_id
+                                left join discounts d on p.discount_id=d.discount_id
                                 where p.isdeleted=0 AND p.price<=${maxin} AND p.price>=${minin} order by p.name desc
                                 LIMIT ${page},8`
                     db.query(sql,(err,result)=>{
                         if(err) res.status(500).send({err,message:'error get product search'})
                         return res.send(result)
                     })    
-                }else {
-                    var sql= `  select p.*,c.idcategory as idcat,c.name as catname,a.*, f.* from products p 
+                } else if (sortprice==1) {
+                    console.log('masuj sortprice cat asc 362')
+                    var sql= `  select p.*,c.idcategory as idcat,c.name as catname, d.discount_rate, a.*, f.* from products p 
+                                join categories c on p.idcategory=c.idcategory
+                                join authors a on p.author_id=a.author_id
+                                join booksformat f on p.format_id=f.format_id
+                                left join discounts d on p.discount_id=d.discount_id
+                                where p.isdeleted=0 AND p.price<=${maxin} AND p.price>=${minin} order by p.price
+                                LIMIT ${page},8`
+                    db.query(sql,(err,result)=>{
+                        if(err) res.status(500).send({err,message:'error get product search'})
+                        return res.send(result)
+                    })
+                } else if (sortprice==2) {
+                    console.log('masuj sortprice cat asc 362')
+                    var sql= `  select p.*,c.idcategory as idcat,c.name as catname, d.discount_rate, a.*, f.* from products p 
+                                join categories c on p.idcategory=c.idcategory
+                                join authors a on p.author_id=a.author_id
+                                join booksformat f on p.format_id=f.format_id
+                                left join discounts d on p.discount_id=d.discount_id
+                                where p.isdeleted=0 AND p.price<=${maxin} AND p.price>=${minin} order by p.price desc
+                                LIMIT ${page},8`
+                    db.query(sql,(err,result)=>{
+                        if(err) res.status(500).send({err,message:'error get product search'})
+                        return res.send(result)
+                    })
+                } else {
+                    var sql= `  select p.*,c.idcategory as idcat,c.name as catname, d.discount_rate, a.*, f.* from products p 
                                  join categories c on p.idcategory=c.idcategory
                                  join authors a on p.author_id=a.author_id
                                  join booksformat f on p.format_id=f.format_id
+                                 left join discounts d on p.discount_id=d.discount_id
                                  where p.isdeleted=0 AND p.price<=${maxin} AND p.price>=${minin}
                                 LIMIT ${page},8`
                     db.query(sql,(err,result)=>{
@@ -917,10 +917,11 @@ module.exports = {
             } else if(maxin && !minin){
                 if(sortname==1) {
                     console.log('masuj sortname asc 301')
-                    var sql= `  select p.*,c.idcategory as idcat,c.name as catname,a.*, f.* from products p 
+                    var sql= `  select p.*,c.idcategory as idcat,c.name as catname, d.discount_rate, a.*, f.* from products p 
                                 join categories c on p.idcategory=c.idcategory
                                 join authors a on p.author_id=a.author_id
                                 join booksformat f on p.format_id=f.format_id
+                                left join discounts d on p.discount_id=d.discount_id
                                 where p.isdeleted=0 AND p.price<=${maxin} order by p.name
                                 LIMIT ${page},8`
                                 // p.name LIKE '%${search}%'
@@ -928,23 +929,51 @@ module.exports = {
                         if(err) res.status(500).send({err,message:'error get product search'})
                         return res.send(result)
                     })    
-                } else if(sortname==2) {
+                } else if (sortname==2) {
                     console.log('masuj sortname asc 317')
-                    var sql= `  select p.*,c.idcategory as idcat,c.name as catname,a.*, f.* from products p 
+                    var sql= `  select p.*,c.idcategory as idcat,c.name as catname, d.discount_rate, a.*, f.* from products p 
                                 join categories c on p.idcategory=c.idcategory
                                 join authors a on p.author_id=a.author_id
                                 join booksformat f on p.format_id=f.format_id
+                                left join discounts d on p.discount_id=d.discount_id
                                 where p.isdeleted=0 AND p.price<=${maxin} order by p.name desc
                                 LIMIT ${page},8`
                     db.query(sql,(err,result)=>{
                         if(err) res.status(500).send({err,message:'error get product search'})
                         return res.send(result)
                     })    
-                }else {
-                    var sql= `  select p.*,c.idcategory as idcat,c.name as catname,a.*, f.* from products p 
+                } else if (sortprice==1) {
+                    console.log('masuj sortprice cat asc 362')
+                    var sql= `  select p.*,c.idcategory as idcat,c.name as catname, d.discount_rate, a.*, f.* from products p 
+                                join categories c on p.idcategory=c.idcategory
+                                join authors a on p.author_id=a.author_id
+                                join booksformat f on p.format_id=f.format_id
+                                left join discounts d on p.discount_id=d.discount_id
+                                where p.isdeleted=0 AND p.price<=${maxin} order by p.price
+                                LIMIT ${page},8`
+                    db.query(sql,(err,result)=>{
+                        if(err) res.status(500).send({err,message:'error get product search'})
+                        return res.send(result)
+                    })
+                } else if (sortprice==2) {
+                    console.log('masuj sortprice cat asc 362')
+                    var sql= `  select p.*,c.idcategory as idcat,c.name as catname, d.discount_rate, a.*, f.* from products p 
+                                join categories c on p.idcategory=c.idcategory
+                                join authors a on p.author_id=a.author_id
+                                join booksformat f on p.format_id=f.format_id
+                                left join discounts d on p.discount_id=d.discount_id
+                                where p.isdeleted=0 AND p.price<=${maxin} order by p.price desc
+                                LIMIT ${page},8`
+                    db.query(sql,(err,result)=>{
+                        if(err) res.status(500).send({err,message:'error get product search'})
+                        return res.send(result)
+                    })
+                } else {
+                    var sql= `  select p.*,c.idcategory as idcat,c.name as catname, d.discount_rate, a.*, f.* from products p 
                                  join categories c on p.idcategory=c.idcategory
                                  join authors a on p.author_id=a.author_id
                                  join booksformat f on p.format_id=f.format_id
+                                 left join discounts d on p.discount_id=d.discount_id
                                  where p.isdeleted=0 AND p.price<=${maxin}
                                 LIMIT ${page},8`
                     db.query(sql,(err,result)=>{
@@ -955,10 +984,11 @@ module.exports = {
             } else if(!maxin && minin){
                 if(sortname==1) {
                     console.log('masuj sortname asc 301')
-                    var sql= `  select p.*,c.idcategory as idcat,c.name as catname,a.*, f.* from products p 
+                    var sql= `  select p.*,c.idcategory as idcat,c.name as catname, d.discount_rate, a.*, f.* from products p 
                                 join categories c on p.idcategory=c.idcategory
                                 join authors a on p.author_id=a.author_id
                                 join booksformat f on p.format_id=f.format_id
+                                left join discounts d on p.discount_id=d.discount_id
                                 where p.isdeleted=0 AND p.price>=${minin} order by p.name
                                 LIMIT ${page},8`
                                 // p.name LIKE '%${search}%'
@@ -966,23 +996,51 @@ module.exports = {
                         if(err) res.status(500).send({err,message:'error get product search'})
                         return res.send(result)
                     })    
-                } else if(sortname==2) {
+                } else if (sortname==2) {
                     console.log('masuj sortname asc 317')
-                    var sql= `  select p.*,c.idcategory as idcat,c.name as catname,a.*, f.* from products p 
+                    var sql= `  select p.*,c.idcategory as idcat,c.name as catname, d.discount_rate, a.*, f.* from products p 
                                 join categories c on p.idcategory=c.idcategory
                                 join authors a on p.author_id=a.author_id
                                 join booksformat f on p.format_id=f.format_id
+                                left join discounts d on p.discount_id=d.discount_id
                                 where p.isdeleted=0 AND p.price>=${minin} order by p.name desc
                                 LIMIT ${page},8`
                     db.query(sql,(err,result)=>{
                         if(err) res.status(500).send({err,message:'error get product search'})
                         return res.send(result)
                     })    
+                } else if (sortprice==1) {
+                    console.log('masuj sortprice cat asc 362')
+                    var sql= `  select p.*,c.idcategory as idcat,c.name as catname, d.discount_rate, a.*, f.* from products p 
+                                join categories c on p.idcategory=c.idcategory
+                                join authors a on p.author_id=a.author_id
+                                join booksformat f on p.format_id=f.format_id
+                                left join discounts d on p.discount_id=d.discount_id
+                                where p.isdeleted=0 AND p.price>=${minin} order by p.price
+                                LIMIT ${page},8`
+                    db.query(sql,(err,result)=>{
+                        if(err) res.status(500).send({err,message:'error get product search'})
+                        return res.send(result)
+                    })
+                }else if (sortprice==2) {
+                    console.log('masuj sortprice cat asc 362')
+                    var sql= `  select p.*,c.idcategory as idcat,c.name as catname, d.discount_rate, a.*, f.* from products p 
+                                join categories c on p.idcategory=c.idcategory
+                                join authors a on p.author_id=a.author_id
+                                join booksformat f on p.format_id=f.format_id
+                                left join discounts d on p.discount_id=d.discount_id
+                                where p.isdeleted=0 AND p.price>=${minin} order by p.price desc
+                                LIMIT ${page},8`
+                    db.query(sql,(err,result)=>{
+                        if(err) res.status(500).send({err,message:'error get product search'})
+                        return res.send(result)
+                    })
                 }else {
-                    var sql= `  select p.*,c.idcategory as idcat,c.name as catname,a.*, f.* from products p 
+                    var sql= `  select p.*,c.idcategory as idcat,c.name as catname, d.discount_rate, a.*, f.* from products p 
                                  join categories c on p.idcategory=c.idcategory
                                  join authors a on p.author_id=a.author_id
                                  join booksformat f on p.format_id=f.format_id
+                                 left join discounts d on p.discount_id=d.discount_id
                                  where p.isdeleted=0 AND p.price>=${minin}
                                 LIMIT ${page},8`
                     db.query(sql,(err,result)=>{
@@ -993,10 +1051,11 @@ module.exports = {
             } else if(cat){
                 if(sortname==1) {
                     console.log('masuj sortname asc 338')
-                    var sql= `  select p.*,c.idcategory as idcat,c.name as catname,a.*, f.* from products p 
+                    var sql= `  select p.*,c.idcategory as idcat,c.name as catname, d.discount_rate, a.*, f.* from products p 
                                 join categories c on p.idcategory=c.idcategory
                                 join authors a on p.author_id=a.author_id
                                 join booksformat f on p.format_id=f.format_id
+                                left join discounts d on p.discount_id=d.discount_id
                                 where p.isdeleted=0 AND p.idcategory=${cat} order by p.name
                                 LIMIT ${page},8`
                     db.query(sql,(err,result)=>{
@@ -1005,10 +1064,11 @@ module.exports = {
                     })    
                 }else if(sortname==2) {
                     console.log('masuj sortname desc 350')
-                    var sql= `  select p.*,c.idcategory as idcat,c.name as catname,a.*, f.* from products p 
+                    var sql= `  select p.*,c.idcategory as idcat,c.name as catname, d.discount_rate, a.*, f.* from products p 
                                 join categories c on p.idcategory=c.idcategory
                                 join authors a on p.author_id=a.author_id
                                 join booksformat f on p.format_id=f.format_id
+                                left join discounts d on p.discount_id=d.discount_id
                                 where p.isdeleted=0 AND p.idcategory=${cat} order by p.name desc
                                 LIMIT ${page},8`
                     db.query(sql,(err,result)=>{
@@ -1017,10 +1077,11 @@ module.exports = {
                     })    
                 }else if (sortprice==1) {
                     console.log('masuj sortprice cat asc 362')
-                    var sql= `  select p.*,c.idcategory as idcat,c.name as catname,a.*, f.* from products p 
+                    var sql= `  select p.*,c.idcategory as idcat,c.name as catname, d.discount_rate, a.*, f.* from products p 
                                 join categories c on p.idcategory=c.idcategory
                                 join authors a on p.author_id=a.author_id
                                 join booksformat f on p.format_id=f.format_id
+                                left join discounts d on p.discount_id=d.discount_id
                                 where p.isdeleted=0 AND p.idcategory=${cat} order by p.price
                                 LIMIT ${page},8`
                     db.query(sql,(err,result)=>{
@@ -1029,10 +1090,11 @@ module.exports = {
                     })
                 }else if (sortprice==2) {
                     console.log('masuj sortprice cat desc 374')
-                    var sql= `  select p.*,c.idcategory as idcat,c.name as catname,a.*, f.* from products p 
+                    var sql= `  select p.*,c.idcategory as idcat,c.name as catname, d.discount_rate, a.*, f.* from products p 
                                 join categories c on p.idcategory=c.idcategory
                                 join authors a on p.author_id=a.author_id
                                 join booksformat f on p.format_id=f.format_id
+                                left join discounts d on p.discount_id=d.discount_id
                                 where p.isdeleted=0 AND p.idcategory=${cat} order by p.price desc
                                 LIMIT ${page},8`
                     db.query(sql,(err,result)=>{
@@ -1041,10 +1103,11 @@ module.exports = {
                     })
                 } else {
                     console.log('masuj cat 362')
-                    var sql= `  select p.*,c.idcategory as idcat,c.name as catname,a.*, f.* from products p 
+                    var sql= `  select p.*,c.idcategory as idcat,c.name as catname, d.discount_rate, a.*, f.* from products p 
                                  join categories c on p.idcategory=c.idcategory
                                  join authors a on p.author_id=a.author_id
                                  join booksformat f on p.format_id=f.format_id
+                                 left join discounts d on p.discount_id=d.discount_id
                                  where p.isdeleted=0 AND p.idcategory=${cat}
                                 LIMIT ${page},8`
                     db.query(sql,(err,result)=>{
@@ -1055,10 +1118,11 @@ module.exports = {
             }else{
                 if(sortname==1) {
                     console.log('masuj sortname asc 400')
-                    var sql= `  select p.*,c.idcategory as idcat,c.name as catname,a.*, f.* from products p 
+                    var sql= `  select p.*,c.idcategory as idcat,c.name as catname, d.discount_rate, a.*, f.* from products p 
                                 join categories c on p.idcategory=c.idcategory
                                 join authors a on p.author_id=a.author_id
                                 join booksformat f on p.format_id=f.format_id
+                                left join discounts d on p.discount_id=d.discount_id
                                 where p.isdeleted=0 order by p.name
                                 LIMIT ${page},8`
                     db.query(sql,(err,result)=>{
@@ -1067,10 +1131,11 @@ module.exports = {
                     })    
                 }else if(sortname==2) {
                     console.log('masuj sortname desc 412')
-                    var sql= `  select p.*,c.idcategory as idcat,c.name as catname,a.*, f.* from products p 
+                    var sql= `  select p.*,c.idcategory as idcat,c.name as catname, d.discount_rate, a.*, f.* from products p 
                                 join categories c on p.idcategory=c.idcategory
                                 join authors a on p.author_id=a.author_id
                                 join booksformat f on p.format_id=f.format_id
+                                left join discounts d on p.discount_id=d.discount_id
                                 where p.isdeleted=0 order by p.name desc
                                 LIMIT ${page},8`
                     db.query(sql,(err,result)=>{
@@ -1079,10 +1144,11 @@ module.exports = {
                     })    
                 } else if (sortprice==1) {
                         console.log('masuj sortprice asc 424')
-                        var sql= `  select p.*,c.idcategory as idcat,c.name as catname,a.*, f.* from products p 
+                        var sql= `  select p.*,c.idcategory as idcat,c.name as catname, d.discount_rate, a.*, f.* from products p 
                                     join categories c on p.idcategory=c.idcategory
                                     join authors a on p.author_id=a.author_id
                                     join booksformat f on p.format_id=f.format_id
+                                    left join discounts d on p.discount_id=d.discount_id
                                     where p.isdeleted=0 order by p.price
                                     LIMIT ${page},8`
                         db.query(sql,(err,result)=>{
@@ -1091,10 +1157,11 @@ module.exports = {
                         })
                 } else if (sortprice==2) {
                     console.log('masuj sortprice desc 436')
-                    var sql= `  select p.*,c.idcategory as idcat,c.name as catname,a.*, f.* from products p 
+                    var sql= `  select p.*,c.idcategory as idcat,c.name as catname, d.discount_rate, a.*, f.* from products p 
                                 join categories c on p.idcategory=c.idcategory
                                 join authors a on p.author_id=a.author_id
                                 join booksformat f on p.format_id=f.format_id
+                                left join discounts d on p.discount_id=d.discount_id
                                 where p.isdeleted=0 order by p.price desc
                                 LIMIT ${page},8`
                     db.query(sql,(err,result)=>{
@@ -1102,10 +1169,11 @@ module.exports = {
                         return res.send(result)
                     })
                 } else{
-                    var sql= `  select p.*,c.idcategory as idcat,c.name as catname,a.*, f.* from products p 
+                    var sql= `  select p.*,c.idcategory as idcat,c.name as catname, d.discount_rate, a.*, f.* from products p 
                                  join categories c on p.idcategory=c.idcategory
                                  join authors a on p.author_id=a.author_id
                                  join booksformat f on p.format_id=f.format_id
+                                 left join discounts d on p.discount_id=d.discount_id
                                  where p.isdeleted=0
                                 LIMIT ${page},8`
                     db.query(sql,(err,result)=>{
@@ -1114,373 +1182,18 @@ module.exports = {
                     })
                 }
 
-                }
+            }
         // }
     },
 
     getsearchproduct: (req, res) => {
-        const { cat, disc, page, sortname, sortprice } = req.query
-        const maxin = parseInt(req.query.inputMax)
-        const minin = parseInt(req.query.inputMin)
+        // const { cat, disc, page, sortname, sortprice } = req.query
+        // const maxin = parseInt(req.query.inputMax)
+        // const minin = parseInt(req.query.inputMin)
         const nama = req.query.inputNama
         console.log(minin, '300')
 
         console.log(req.query)
-        // if (maxin && minin) {
-        //     if (sortname == 1) {
-        //         console.log('masuj sortname asc 301')
-        //         var sql = `  select p.*,c.idcategory as idcat,c.name as catname,a.*, f.* from products p 
-        //                         join categories c on p.idcategory=c.idcategory
-        //                         join authors a on p.author_id=a.author_id
-        //                         join booksformat f on p.format_id=f.format_id
-        //                         where p.isdeleted=0 AND p.name like'%${nama}%' AND p.price<=${maxin} AND p.price>=${minin} order by p.name
-        //                         LIMIT ${page},8`
-        //         // p.name LIKE '%${search}%'
-        //         db.query(sql, (err, result) => {
-        //             if (err) res.status(500).send({ err, message: 'error get product search' })
-        //             return res.send(result)
-        //         })
-        //     } else if (sortname == 0) {
-        //         console.log('masuj sortname asc 317')
-        //         var sql = `  select p.*,c.idcategory as idcat,c.name as catname,a.*, f.* from products p 
-        //                         join categories c on p.idcategory=c.idcategory
-        //                         join authors a on p.author_id=a.author_id
-        //                         join booksformat f on p.format_id=f.format_id
-        //                         where p.isdeleted=0 AND p.name like'%${nama}%' AND p.price<=${maxin} AND p.price>=${minin} order by p.name desc
-        //                         LIMIT ${page},8`
-        //         db.query(sql, (err, result) => {
-        //             if (err) res.status(500).send({ err, message: 'error get product search' })
-        //             return res.send(result)
-        //         })
-        //     } else {
-        //         var sql = `  select p.*,c.idcategory as idcat,c.name as catname,a.*, f.* from products p 
-        //                          join categories c on p.idcategory=c.idcategory
-        //                          join authors a on p.author_id=a.author_id
-        //                          join booksformat f on p.format_id=f.format_id
-        //                          where p.isdeleted=0 AND p.name like'%${nama}%' AND p.price<=${maxin} AND p.price>=${minin}
-        //                         LIMIT ${page},8`
-        //         db.query(sql, (err, result) => {
-        //             if (err) res.status(500).send({ err, message: 'error get product search' })
-        //             return res.send(result)
-        //         })
-        //     }
-        // } else if (nama) {
-        //     if (sortprice == 1) {
-        //         console.log('masuj sortprice asc 301')
-        //         var sql = `  select p.*,c.idcategory as idcat,c.name as catname,a.*, f.* from products p 
-        //                             join categories c on p.idcategory=c.idcategory
-        //                             join authors a on p.author_id=a.author_id
-        //                             join booksformat f on p.format_id=f.format_id
-        //                             where p.isdeleted=0 AND p.name like'%${nama}%' order by p.price
-        //                             LIMIT ${page},8`
-        //         // p.name LIKE '%${search}%'
-        //         db.query(sql, (err, result) => {
-        //             if (err) res.status(500).send({ err, message: 'error get product search' })
-        //             return res.send(result)
-        //         })
-        //     } else if (sortprice == 0) {
-        //         console.log('masuj sortname asc 317')
-        //         var sql = `  select p.*,c.idcategory as idcat,c.name as catname,a.*, f.* from products p 
-        //                             join categories c on p.idcategory=c.idcategory
-        //                             join authors a on p.author_id=a.author_id
-        //                             join booksformat f on p.format_id=f.format_id
-        //                             where p.isdeleted=0 AND p.name like'%${nama}%' order by p.price desc
-        //                             LIMIT ${page},8`
-        //         db.query(sql, (err, result) => {
-        //             if (err) res.status(500).send({ err, message: 'error get product search' })
-        //             return res.send(result)
-        //         })
-        //     } else if (sortname == 1) {
-        //         console.log('masuj sortname asc 317')
-        //         var sql = `  select p.*,c.idcategory as idcat,c.name as catname,a.*, f.* from products p 
-        //                             join categories c on p.idcategory=c.idcategory
-        //                             join authors a on p.author_id=a.author_id
-        //                             join booksformat f on p.format_id=f.format_id
-        //                             where p.isdeleted=0 AND p.name like'%${nama}%' order by p.name
-        //                             LIMIT ${page},8`
-        //         db.query(sql, (err, result) => {
-        //             if (err) res.status(500).send({ err, message: 'error get product search' })
-        //             return res.send(result)
-        //         })
-        //     } else if (sortname == 0) {
-        //         console.log('masuj sortname asc 317')
-        //         var sql = `  select p.*,c.idcategory as idcat,c.name as catname,a.*, f.* from products p 
-        //                             join categories c on p.idcategory=c.idcategory
-        //                             join authors a on p.author_id=a.author_id
-        //                             join booksformat f on p.format_id=f.format_id
-        //                             where p.isdeleted=0 AND p.name like'%${nama}%' order by p.name desc
-        //                             LIMIT ${page},8`
-        //         db.query(sql, (err, result) => {
-        //             if (err) res.status(500).send({ err, message: 'error get product search' })
-        //             return res.send(result)
-        //         })
-        //     } else {
-        //         var sql = `  select p.*,c.idcategory as idcat,c.name as catname,a.*, f.* from products p 
-        //                              join categories c on p.idcategory=c.idcategory
-        //                              join authors a on p.author_id=a.author_id
-        //                              join booksformat f on p.format_id=f.format_id
-        //                              where p.isdeleted=0 AND p.name like'%${nama}%'
-        //                             LIMIT ${page},8`
-        //         db.query(sql, (err, result) => {
-        //             if (err) res.status(500).send({ err, message: 'error get product search' })
-        //             return res.send(result)
-        //         })
-        //     }
-        // } else if (maxin && !minin) {
-        //     if (sortname == 1) {
-        //         console.log('masuj sortname asc 301')
-        //         var sql = `  select p.*,c.idcategory as idcat,c.name as catname,a.*, f.* from products p 
-        //                         join categories c on p.idcategory=c.idcategory
-        //                         join authors a on p.author_id=a.author_id
-        //                         join booksformat f on p.format_id=f.format_id
-        //                         where p.isdeleted=0 AND p.name like'%${nama}%' AND p.price<=${maxin} order by p.name
-        //                         LIMIT ${page},8`
-        //         // p.name LIKE '%${search}%'
-        //         db.query(sql, (err, result) => {
-        //             if (err) res.status(500).send({ err, message: 'error get product search' })
-        //             return res.send(result)
-        //         })
-        //     } else if (sortname == 0) {
-        //         console.log('masuj sortname asc 317')
-        //         var sql = `  select p.*,c.idcategory as idcat,c.name as catname,a.*, f.* from products p 
-        //                         join categories c on p.idcategory=c.idcategory
-        //                         join authors a on p.author_id=a.author_id
-        //                         join booksformat f on p.format_id=f.format_id
-        //                         where p.isdeleted=0 AND p.name like'%${nama}%' AND p.price<=${maxin} order by p.name desc
-        //                         LIMIT ${page},8`
-        //         db.query(sql, (err, result) => {
-        //             if (err) res.status(500).send({ err, message: 'error get product search' })
-        //             return res.send(result)
-        //         })
-        //     } else {
-        //         var sql = `  select p.*,c.idcategory as idcat,c.name as catname,a.*, f.* from products p 
-        //                          join categories c on p.idcategory=c.idcategory
-        //                          join authors a on p.author_id=a.author_id
-        //                          join booksformat f on p.format_id=f.format_id
-        //                          where p.isdeleted=0 AND p.name like'%${nama}%' AND p.price<=${maxin}
-        //                         LIMIT ${page},8`
-        //         db.query(sql, (err, result) => {
-        //             if (err) res.status(500).send({ err, message: 'error get product search' })
-        //             return res.send(result)
-        //         })
-        //     }
-        // } else if (!maxin && minin) {
-        //     if (sortname == 1) {
-        //         console.log('masuj sortname asc 301')
-        //         var sql = `  select p.*,c.idcategory as idcat,c.name as catname,a.*, f.* from products p 
-        //                         join categories c on p.idcategory=c.idcategory
-        //                         join authors a on p.author_id=a.author_id
-        //                         join booksformat f on p.format_id=f.format_id
-        //                         where p.isdeleted=0 AND p.name like'%${nama}%' AND p.price>=${minin} order by p.name
-        //                         LIMIT ${page},8`
-        //         // p.name LIKE '%${search}%'
-        //         db.query(sql, (err, result) => {
-        //             if (err) res.status(500).send({ err, message: 'error get product search' })
-        //             return res.send(result)
-        //         })
-        //     } else if (sortname == 0) {
-        //         console.log('masuj sortname asc 317')
-        //         var sql = `  select p.*,c.idcategory as idcat,c.name as catname,a.*, f.* from products p 
-        //                         join categories c on p.idcategory=c.idcategory
-        //                         join authors a on p.author_id=a.author_id
-        //                         join booksformat f on p.format_id=f.format_id
-        //                         where p.isdeleted=0 AND p.name like'%${nama}%' AND p.price>=${minin} order by p.name desc
-        //                         LIMIT ${page},8`
-        //         db.query(sql, (err, result) => {
-        //             if (err) res.status(500).send({ err, message: 'error get product search' })
-        //             return res.send(result)
-        //         })
-        //     } else {
-        //         var sql = `  select p.*,c.idcategory as idcat,c.name as catname,a.*, f.* from products p 
-        //                          join categories c on p.idcategory=c.idcategory
-        //                          join authors a on p.author_id=a.author_id
-        //                          join booksformat f on p.format_id=f.format_id
-        //                          where p.isdeleted=0 AND p.name like'%${nama}%' AND p.price>=${minin}
-        //                         LIMIT ${page},8`
-        //         db.query(sql, (err, result) => {
-        //             if (err) res.status(500).send({ err, message: 'error get product search' })
-        //             return res.send(result)
-        //         })
-        //     }
-        // } else if (cat) {
-        //     if (sortname == 1) {
-        //         console.log('masuj sortname asc 338')
-        //         var sql = `  select p.*,c.idcategory as idcat,c.name as catname,a.*, f.* from products p 
-        //                         join categories c on p.idcategory=c.idcategory
-        //                         join authors a on p.author_id=a.author_id
-        //                         join booksformat f on p.format_id=f.format_id
-        //                         where p.isdeleted=0 AND p.name like'%${nama}%' AND p.idcategory=${cat} order by p.name
-        //                         LIMIT ${page},8`
-        //         db.query(sql, (err, result) => {
-        //             if (err) res.status(500).send({ err, message: 'error get product search' })
-        //             return res.send(result)
-        //         })
-        //     } else if (sortname == 0) {
-        //         console.log('masuj sortname desc 350')
-        //         var sql = `  select p.*,c.idcategory as idcat,c.name as catname,a.*, f.* from products p 
-        //                         join categories c on p.idcategory=c.idcategory
-        //                         join authors a on p.author_id=a.author_id
-        //                         join booksformat f on p.format_id=f.format_id
-        //                         where p.isdeleted=0 AND p.name like'%${nama}%' AND p.idcategory=${cat} order by p.name desc
-        //                         LIMIT ${page},8`
-        //         db.query(sql, (err, result) => {
-        //             if (err) res.status(500).send({ err, message: 'error get product search' })
-        //             return res.send(result)
-        //         })
-        //     } else if (sortprice == 1) {
-        //         console.log('masuj sortprice cat asc 362')
-        //         var sql = `  select p.*,c.idcategory as idcat,c.name as catname,a.*, f.* from products p 
-        //                         join categories c on p.idcategory=c.idcategory
-        //                         join authors a on p.author_id=a.author_id
-        //                         join booksformat f on p.format_id=f.format_id
-        //                         where p.isdeleted=0 AND p.name like'%${nama}%' AND p.idcategory=${cat} order by p.price
-        //                         LIMIT ${page},8`
-        //         db.query(sql, (err, result) => {
-        //             if (err) res.status(500).send({ err, message: 'error get product search' })
-        //             return res.send(result)
-        //         })
-        //     } else if (sortprice == 0) {
-        //         console.log('masuj sortprice cat desc 374')
-        //         var sql = `  select p.*,c.idcategory as idcat,c.name as catname,a.*, f.* from products p 
-        //                         join categories c on p.idcategory=c.idcategory
-        //                         join authors a on p.author_id=a.author_id
-        //                         join booksformat f on p.format_id=f.format_id
-        //                         where p.isdeleted=0 AND p.name like'%${nama}%' AND p.idcategory=${cat} order by p.price desc
-        //                         LIMIT ${page},8`
-        //         db.query(sql, (err, result) => {
-        //             if (err) res.status(500).send({ err, message: 'error get product search' })
-        //             return res.send(result)
-        //         })
-        //     } else {
-        //         console.log('masuj cat 362')
-        //         var sql = `  select p.*,c.idcategory as idcat,c.name as catname,a.*, f.* from products p 
-        //                          join categories c on p.idcategory=c.idcategory
-        //                          join authors a on p.author_id=a.author_id
-        //                          join booksformat f on p.format_id=f.format_id
-        //                          where p.isdeleted=0 AND p.name like'%${nama}%' AND p.idcategory=${cat}
-        //                         LIMIT ${page},8`
-        //         db.query(sql, (err, result) => {
-        //             if (err) res.status(500).send({ err, message: 'error get total product' })
-        //             return res.send(result)
-        //         })
-        //     }
-        // } else if (disc==1) {
-        //     if (sortname == 1) {
-        //         console.log('masuj disc asc 338')
-        //         var sql = `select p.*,c.idcategory as idcat,c.name as catname, d.*, a.*, f.* from products p 
-        //                     join categories c on p.idcategory=c.idcategory
-        //                     join discounts d on p.discount_id=d.discount_id
-        //                     join authors a on p.author_id=a.author_id
-        //                     join booksformat f on p.format_id=f.format_id
-        //                     where p.isdeleted=0 and d.discount_rate>0 order by p.name
-        //                     LIMIT ${page},8`
-        //         db.query(sql, (err, result) => {
-        //             if (err) res.status(500).send({ err, message: 'error get product search' })
-        //             return res.send(result)
-        //         })
-        //     } else if (sortname == 0) {
-        //         console.log('masuj disc desc 350')
-        //         var sql = `select p.*,c.idcategory as idcat,c.name as catname, d.*, a.*, f.* from products p 
-        //                     join categories c on p.idcategory=c.idcategory
-        //                     join discounts d on p.discount_id=d.discount_id
-        //                     join authors a on p.author_id=a.author_id
-        //                     join booksformat f on p.format_id=f.format_id
-        //                     where p.isdeleted=0 and d.discount_rate>0 order by p.name desc
-        //                     LIMIT ${page},8`
-        //         db.query(sql, (err, result) => {
-        //             if (err) res.status(500).send({ err, message: 'error get product search' })
-        //             return res.send(result)
-        //         })
-        //     } else if (sortprice == 1) {
-        //         console.log('masuj disc cat asc 362')
-        //         var sql = `select p.*,c.idcategory as idcat,c.name as catname, d.*, a.*, f.* from products p 
-        //                     join categories c on p.idcategory=c.idcategory
-        //                     join discounts d on p.discount_id=d.discount_id
-        //                     join authors a on p.author_id=a.author_id
-        //                     join booksformat f on p.format_id=f.format_id
-        //                     where p.isdeleted=0 and d.discount_rate>0 order by p.price
-        //                     LIMIT ${page},8`
-        //         db.query(sql, (err, result) => {
-        //             if (err) res.status(500).send({ err, message: 'error get product search' })
-        //             return res.send(result)
-        //         })
-        //     } else if (sortprice == 0) {
-        //         console.log('masuj disc cat desc 374')
-        //         var sql = `select p.*,c.idcategory as idcat,c.name as catname, d.*, a.*, f.* from products p 
-        //                     join categories c on p.idcategory=c.idcategory
-        //                     join discounts d on p.discount_id=d.discount_id
-        //                     join authors a on p.author_id=a.author_id
-        //                     join booksformat f on p.format_id=f.format_id
-        //                     where p.isdeleted=0 and d.discount_rate>0 order by p.price desc
-        //                     LIMIT ${page},8`
-        //         db.query(sql, (err, result) => {
-        //             if (err) res.status(500).send({ err, message: 'error get product search' })
-        //             return res.send(result)
-        //         })
-        //     } else {
-        //         console.log('masuj disc 362')
-        //         var sql = `select p.*,c.idcategory as idcat,c.name as catname, d.*, a.*, f.* from products p 
-        //                     join categories c on p.idcategory=c.idcategory
-        //                     join discounts d on p.discount_id=d.discount_id
-        //                     join authors a on p.author_id=a.author_id
-        //                     join booksformat f on p.format_id=f.format_id
-        //                     where p.isdeleted=0 and d.discount_rate>0
-        //                     LIMIT ${page},8`
-        //         db.query(sql, (err, result) => {
-        //             if (err) res.status(500).send({ err, message: 'error get discount product' })
-        //             return res.send(result)
-        //         })
-        //     }
-        // } else {
-        //     if (sortname == 1) {
-        //         console.log('masuj sortname asc 400')
-        //         var sql = `  select p.*,c.idcategory as idcat,c.name as catname,a.*, f.* from products p 
-        //                         join categories c on p.idcategory=c.idcategory
-        //                         join authors a on p.author_id=a.author_id
-        //                         join booksformat f on p.format_id=f.format_id
-        //                         where p.isdeleted=0 AND p.name like'%${nama}%' order by p.name
-        //                         LIMIT ${page},8`
-        //         db.query(sql, (err, result) => {
-        //             if (err) res.status(500).send({ err, message: 'error get product search' })
-        //             return res.send(result)
-        //         })
-        //     } else if (sortname == 0) {
-        //         console.log('masuj sortname desc 412')
-        //         var sql = `  select p.*,c.idcategory as idcat,c.name as catname,a.*, f.* from products p 
-        //                         join categories c on p.idcategory=c.idcategory
-        //                         join authors a on p.author_id=a.author_id
-        //                         join booksformat f on p.format_id=f.format_id
-        //                         where p.isdeleted=0 AND p.name like'%${nama}%' order by p.name desc
-        //                         LIMIT ${page},8`
-        //         db.query(sql, (err, result) => {
-        //             if (err) res.status(500).send({ err, message: 'error get product search' })
-        //             return res.send(result)
-        //         })
-        //     } else if (sortprice == 1) {
-        //         console.log('masuj sortprice asc 424')
-        //         var sql = `  select p.*,c.idcategory as idcat,c.name as catname,a.*, f.* from products p 
-        //                             join categories c on p.idcategory=c.idcategory
-        //                             join authors a on p.author_id=a.author_id
-        //                             join booksformat f on p.format_id=f.format_id
-        //                             where p.isdeleted=0 AND p.name like'%${nama}%' order by p.price
-        //                             LIMIT ${page},8`
-        //         db.query(sql, (err, result) => {
-        //             if (err) res.status(500).send({ err, message: 'error get product search' })
-        //             return res.send(result)
-        //         })
-        //     } else if (sortprice == 0) {
-        //         console.log('masuj sortprice desc 436')
-        //         var sql = `  select p.*,c.idcategory as idcat,c.name as catname,a.*, f.* from products p 
-        //                         join categories c on p.idcategory=c.idcategory
-        //                         join authors a on p.author_id=a.author_id
-        //                         join booksformat f on p.format_id=f.format_id
-        //                         where p.isdeleted=0 AND p.name like'%${nama}%' order by p.price desc
-        //                         LIMIT ${page},8`
-        //         db.query(sql, (err, result) => {
-        //             if (err) res.status(500).send({ err, message: 'error get product search' })
-        //             return res.send(result)
-        //         })
-        // } else {
         var sql = `  select p.*,c.idcategory as idcat,c.name as catname, d.discount_rate, a.*, f.* from products p 
                                  join categories c on p.idcategory=c.idcategory
                                  left join discounts d on p.discount_id=d.discount_id
@@ -1509,6 +1222,384 @@ module.exports = {
                 if(err) res.status(500).send({err,message:'error get total product'})
                 return res.send(result)
             })
+    },
+
+    getProductAdmin: (req, res) => {
+        const { cat, disc, page, sortname, sortprice } = req.query
+        const maxin = parseInt(req.query.inputMax)
+        const minin = parseInt(req.query.inputMin)
+        const nama = req.query.inputNama
+        console.log(minin, '300')
+
+        console.log(req.query)
+        if (maxin && minin) {
+            if (sortname == 1) {
+                console.log('masuj sortname asc 301')
+                var sql = `  select p.*,c.idcategory as idcat,c.name as catname,a.*, f.* from products p 
+                                join categories c on p.idcategory=c.idcategory
+                                join authors a on p.author_id=a.author_id
+                                join booksformat f on p.format_id=f.format_id
+                                where p.isdeleted=0 AND p.price<=${maxin} AND p.price>=${minin} order by p.name
+                                LIMIT ${page},8`
+                // p.name LIKE '%${search}%'
+                db.query(sql, (err, result) => {
+                    if (err) res.status(500).send({ err, message: 'error get product search' })
+                    return res.send(result)
+                })
+            } else if (sortname == 0) {
+                console.log('masuj sortname asc 317')
+                var sql = `  select p.*,c.idcategory as idcat,c.name as catname,a.*, f.* from products p 
+                                join categories c on p.idcategory=c.idcategory
+                                join authors a on p.author_id=a.author_id
+                                join booksformat f on p.format_id=f.format_id
+                                where p.isdeleted=0 AND p.price<=${maxin} AND p.price>=${minin} order by p.name desc
+                                LIMIT ${page},8`
+                db.query(sql, (err, result) => {
+                    if (err) res.status(500).send({ err, message: 'error get product search' })
+                    return res.send(result)
+                })
+            } else {
+                var sql = `  select p.*,c.idcategory as idcat,c.name as catname,a.*, f.* from products p 
+                                 join categories c on p.idcategory=c.idcategory
+                                 join authors a on p.author_id=a.author_id
+                                 join booksformat f on p.format_id=f.format_id
+                                 where p.isdeleted=0 AND p.price<=${maxin} AND p.price>=${minin}
+                                LIMIT ${page},8`
+                db.query(sql, (err, result) => {
+                    if (err) res.status(500).send({ err, message: 'error get product search' })
+                    return res.send(result)
+                })
+            }
+        } else if (nama) {
+            if (sortprice == 1) {
+                console.log('masuj sortprice asc 301')
+                var sql = `  select p.*,c.idcategory as idcat,c.name as catname,a.*, f.* from products p 
+                                    join categories c on p.idcategory=c.idcategory
+                                    join authors a on p.author_id=a.author_id
+                                    join booksformat f on p.format_id=f.format_id
+                                    where p.isdeleted=0 AND p.name like'%${nama}%' order by p.price
+                                    LIMIT ${page},8`
+                // p.name LIKE '%${search}%'
+                db.query(sql, (err, result) => {
+                    if (err) res.status(500).send({ err, message: 'error get product search' })
+                    return res.send(result)
+                })
+            } else if (sortprice == 0) {
+                console.log('masuj sortname asc 317')
+                var sql = `  select p.*,c.idcategory as idcat,c.name as catname,a.*, f.* from products p 
+                                    join categories c on p.idcategory=c.idcategory
+                                    join authors a on p.author_id=a.author_id
+                                    join booksformat f on p.format_id=f.format_id
+                                    where p.isdeleted=0 AND p.name like'%${nama}%' order by p.price desc
+                                    LIMIT ${page},8`
+                db.query(sql, (err, result) => {
+                    if (err) res.status(500).send({ err, message: 'error get product search' })
+                    return res.send(result)
+                })
+            } else if (sortname == 1) {
+                console.log('masuj sortname asc 317')
+                var sql = `  select p.*,c.idcategory as idcat,c.name as catname,a.*, f.* from products p 
+                                    join categories c on p.idcategory=c.idcategory
+                                    join authors a on p.author_id=a.author_id
+                                    join booksformat f on p.format_id=f.format_id
+                                    where p.isdeleted=0 AND p.name like'%${nama}%' order by p.name
+                                    LIMIT ${page},8`
+                db.query(sql, (err, result) => {
+                    if (err) res.status(500).send({ err, message: 'error get product search' })
+                    return res.send(result)
+                })
+            } else if (sortname == 0) {
+                console.log('masuj sortname asc 317')
+                var sql = `  select p.*,c.idcategory as idcat,c.name as catname,a.*, f.* from products p 
+                                    join categories c on p.idcategory=c.idcategory
+                                    join authors a on p.author_id=a.author_id
+                                    join booksformat f on p.format_id=f.format_id
+                                    where p.isdeleted=0 AND p.name like'%${nama}%' order by p.name desc
+                                    LIMIT ${page},8`
+                db.query(sql, (err, result) => {
+                    if (err) res.status(500).send({ err, message: 'error get product search' })
+                    return res.send(result)
+                })
+            } else {
+                var sql = `  select p.*,c.idcategory as idcat,c.name as catname,a.*, f.* from products p 
+                                     join categories c on p.idcategory=c.idcategory
+                                     join authors a on p.author_id=a.author_id
+                                     join booksformat f on p.format_id=f.format_id
+                                     where p.isdeleted=0 AND p.name like'%${nama}%'
+                                    LIMIT ${page},8`
+                db.query(sql, (err, result) => {
+                    if (err) res.status(500).send({ err, message: 'error get product search' })
+                    return res.send(result)
+                })
+            }
+        } else if (maxin && !minin) {
+            if (sortname == 1) {
+                console.log('masuj sortname asc 301')
+                var sql = `  select p.*,c.idcategory as idcat,c.name as catname,a.*, f.* from products p 
+                                join categories c on p.idcategory=c.idcategory
+                                join authors a on p.author_id=a.author_id
+                                join booksformat f on p.format_id=f.format_id
+                                where p.isdeleted=0 AND p.price<=${maxin} order by p.name
+                                LIMIT ${page},8`
+                // p.name LIKE '%${search}%'
+                db.query(sql, (err, result) => {
+                    if (err) res.status(500).send({ err, message: 'error get product search' })
+                    return res.send(result)
+                })
+            } else if (sortname == 0) {
+                console.log('masuj sortname asc 317')
+                var sql = `  select p.*,c.idcategory as idcat,c.name as catname,a.*, f.* from products p 
+                                join categories c on p.idcategory=c.idcategory
+                                join authors a on p.author_id=a.author_id
+                                join booksformat f on p.format_id=f.format_id
+                                where p.isdeleted=0 AND p.price<=${maxin} order by p.name desc
+                                LIMIT ${page},8`
+                db.query(sql, (err, result) => {
+                    if (err) res.status(500).send({ err, message: 'error get product search' })
+                    return res.send(result)
+                })
+            } else {
+                var sql = `  select p.*,c.idcategory as idcat,c.name as catname,a.*, f.* from products p 
+                                 join categories c on p.idcategory=c.idcategory
+                                 join authors a on p.author_id=a.author_id
+                                 join booksformat f on p.format_id=f.format_id
+                                 where p.isdeleted=0 AND p.price<=${maxin}
+                                LIMIT ${page},8`
+                db.query(sql, (err, result) => {
+                    if (err) res.status(500).send({ err, message: 'error get product search' })
+                    return res.send(result)
+                })
+            }
+        } else if (!maxin && minin) {
+            if (sortname == 1) {
+                console.log('masuj sortname asc 301')
+                var sql = `  select p.*,c.idcategory as idcat,c.name as catname,a.*, f.* from products p 
+                                join categories c on p.idcategory=c.idcategory
+                                join authors a on p.author_id=a.author_id
+                                join booksformat f on p.format_id=f.format_id
+                                where p.isdeleted=0 AND p.price>=${minin} order by p.name
+                                LIMIT ${page},8`
+                // p.name LIKE '%${search}%'
+                db.query(sql, (err, result) => {
+                    if (err) res.status(500).send({ err, message: 'error get product search' })
+                    return res.send(result)
+                })
+            } else if (sortname == 0) {
+                console.log('masuj sortname asc 317')
+                var sql = `  select p.*,c.idcategory as idcat,c.name as catname,a.*, f.* from products p 
+                                join categories c on p.idcategory=c.idcategory
+                                join authors a on p.author_id=a.author_id
+                                join booksformat f on p.format_id=f.format_id
+                                where p.isdeleted=0 AND p.price>=${minin} order by p.name desc
+                                LIMIT ${page},8`
+                db.query(sql, (err, result) => {
+                    if (err) res.status(500).send({ err, message: 'error get product search' })
+                    return res.send(result)
+                })
+            } else {
+                var sql = `  select p.*,c.idcategory as idcat,c.name as catname,a.*, f.* from products p 
+                                 join categories c on p.idcategory=c.idcategory
+                                 join authors a on p.author_id=a.author_id
+                                 join booksformat f on p.format_id=f.format_id
+                                 where p.isdeleted=0 AND p.price>=${minin}
+                                LIMIT ${page},8`
+                db.query(sql, (err, result) => {
+                    if (err) res.status(500).send({ err, message: 'error get product search' })
+                    return res.send(result)
+                })
+            }
+        } else if (cat) {
+            if (sortname == 1) {
+                console.log('masuj sortname asc 338')
+                var sql = `  select p.*,c.idcategory as idcat,c.name as catname,a.*, f.* from products p 
+                                join categories c on p.idcategory=c.idcategory
+                                join authors a on p.author_id=a.author_id
+                                join booksformat f on p.format_id=f.format_id
+                                where p.isdeleted=0 AND p.idcategory=${cat} order by p.name
+                                LIMIT ${page},8`
+                db.query(sql, (err, result) => {
+                    if (err) res.status(500).send({ err, message: 'error get product search' })
+                    return res.send(result)
+                })
+            } else if (sortname == 0) {
+                console.log('masuj sortname desc 350')
+                var sql = `  select p.*,c.idcategory as idcat,c.name as catname,a.*, f.* from products p 
+                                join categories c on p.idcategory=c.idcategory
+                                join authors a on p.author_id=a.author_id
+                                join booksformat f on p.format_id=f.format_id
+                                where p.isdeleted=0 AND p.idcategory=${cat} order by p.name desc
+                                LIMIT ${page},8`
+                db.query(sql, (err, result) => {
+                    if (err) res.status(500).send({ err, message: 'error get product search' })
+                    return res.send(result)
+                })
+            } else if (sortprice == 1) {
+                console.log('masuj sortprice cat asc 362')
+                var sql = `  select p.*,c.idcategory as idcat,c.name as catname,a.*, f.* from products p 
+                                join categories c on p.idcategory=c.idcategory
+                                join authors a on p.author_id=a.author_id
+                                join booksformat f on p.format_id=f.format_id
+                                where p.isdeleted=0 AND p.idcategory=${cat} order by p.price
+                                LIMIT ${page},8`
+                db.query(sql, (err, result) => {
+                    if (err) res.status(500).send({ err, message: 'error get product search' })
+                    return res.send(result)
+                })
+            } else if (sortprice == 0) {
+                console.log('masuj sortprice cat desc 374')
+                var sql = `  select p.*,c.idcategory as idcat,c.name as catname,a.*, f.* from products p 
+                                join categories c on p.idcategory=c.idcategory
+                                join authors a on p.author_id=a.author_id
+                                join booksformat f on p.format_id=f.format_id
+                                where p.isdeleted=0 AND p.idcategory=${cat} order by p.price desc
+                                LIMIT ${page},8`
+                db.query(sql, (err, result) => {
+                    if (err) res.status(500).send({ err, message: 'error get product search' })
+                    return res.send(result)
+                })
+            } else {
+                console.log('masuj cat 362')
+                var sql = `  select p.*,c.idcategory as idcat,c.name as catname,a.*, f.* from products p 
+                                 join categories c on p.idcategory=c.idcategory
+                                 join authors a on p.author_id=a.author_id
+                                 join booksformat f on p.format_id=f.format_id
+                                 where p.isdeleted=0 AND p.idcategory=${cat}
+                                LIMIT ${page},8`
+                db.query(sql, (err, result) => {
+                    if (err) res.status(500).send({ err, message: 'error get total product' })
+                    return res.send(result)
+                })
+            }
+        } else if (disc == 1) {
+            if (sortname == 1) {
+                console.log('masuj disc asc 338')
+                var sql = `select p.*,c.idcategory as idcat,c.name as catname, d.*, a.*, f.* from products p 
+                            join categories c on p.idcategory=c.idcategory
+                            join discounts d on p.discount_id=d.discount_id
+                            join authors a on p.author_id=a.author_id
+                            join booksformat f on p.format_id=f.format_id
+                            where p.isdeleted=0 and d.discount_rate>0 order by p.name
+                            LIMIT ${page},8`
+                db.query(sql, (err, result) => {
+                    if (err) res.status(500).send({ err, message: 'error get product search' })
+                    return res.send(result)
+                })
+            } else if (sortname == 0) {
+                console.log('masuj disc desc 350')
+                var sql = `select p.*,c.idcategory as idcat,c.name as catname, d.*, a.*, f.* from products p 
+                            join categories c on p.idcategory=c.idcategory
+                            join discounts d on p.discount_id=d.discount_id
+                            join authors a on p.author_id=a.author_id
+                            join booksformat f on p.format_id=f.format_id
+                            where p.isdeleted=0 and d.discount_rate>0 order by p.name desc
+                            LIMIT ${page},8`
+                db.query(sql, (err, result) => {
+                    if (err) res.status(500).send({ err, message: 'error get product search' })
+                    return res.send(result)
+                })
+            } else if (sortprice == 1) {
+                console.log('masuj disc cat asc 362')
+                var sql = `select p.*,c.idcategory as idcat,c.name as catname, d.*, a.*, f.* from products p 
+                            join categories c on p.idcategory=c.idcategory
+                            join discounts d on p.discount_id=d.discount_id
+                            join authors a on p.author_id=a.author_id
+                            join booksformat f on p.format_id=f.format_id
+                            where p.isdeleted=0 and d.discount_rate>0 order by p.price
+                            LIMIT ${page},8`
+                db.query(sql, (err, result) => {
+                    if (err) res.status(500).send({ err, message: 'error get product search' })
+                    return res.send(result)
+                })
+            } else if (sortprice == 0) {
+                console.log('masuj disc cat desc 374')
+                var sql = `select p.*,c.idcategory as idcat,c.name as catname, d.*, a.*, f.* from products p 
+                            join categories c on p.idcategory=c.idcategory
+                            join discounts d on p.discount_id=d.discount_id
+                            join authors a on p.author_id=a.author_id
+                            join booksformat f on p.format_id=f.format_id
+                            where p.isdeleted=0 and d.discount_rate>0 order by p.price desc
+                            LIMIT ${page},8`
+                db.query(sql, (err, result) => {
+                    if (err) res.status(500).send({ err, message: 'error get product search' })
+                    return res.send(result)
+                })
+            } else {
+                console.log('masuj disc 362')
+                var sql = `select p.*,c.idcategory as idcat,c.name as catname, d.*, a.*, f.* from products p 
+                            join categories c on p.idcategory=c.idcategory
+                            join discounts d on p.discount_id=d.discount_id
+                            join authors a on p.author_id=a.author_id
+                            join booksformat f on p.format_id=f.format_id
+                            where p.isdeleted=0 and d.discount_rate>0
+                            LIMIT ${page},8`
+                db.query(sql, (err, result) => {
+                    if (err) res.status(500).send({ err, message: 'error get discount product' })
+                    return res.send(result)
+                })
+            }
+        } else {
+            if (sortname == 1) {
+                console.log('masuj sortname asc 400')
+                var sql = `  select p.*,c.idcategory as idcat,c.name as catname,a.*, f.* from products p 
+                                join categories c on p.idcategory=c.idcategory
+                                join authors a on p.author_id=a.author_id
+                                join booksformat f on p.format_id=f.format_id
+                                where p.isdeleted=0 order by p.name
+                                LIMIT ${page},8`
+                db.query(sql, (err, result) => {
+                    if (err) res.status(500).send({ err, message: 'error get product search' })
+                    return res.send(result)
+                })
+            } else if (sortname == 0) {
+                console.log('masuj sortname desc 412')
+                var sql = `  select p.*,c.idcategory as idcat,c.name as catname,a.*, f.* from products p 
+                                join categories c on p.idcategory=c.idcategory
+                                join authors a on p.author_id=a.author_id
+                                join booksformat f on p.format_id=f.format_id
+                                where p.isdeleted=0 order by p.name desc
+                                LIMIT ${page},8`
+                db.query(sql, (err, result) => {
+                    if (err) res.status(500).send({ err, message: 'error get product search' })
+                    return res.send(result)
+                })
+            } else if (sortprice == 1) {
+                console.log('masuj sortprice asc 424')
+                var sql = `  select p.*,c.idcategory as idcat,c.name as catname,a.*, f.* from products p 
+                                    join categories c on p.idcategory=c.idcategory
+                                    join authors a on p.author_id=a.author_id
+                                    join booksformat f on p.format_id=f.format_id
+                                    where p.isdeleted=0 order by p.price
+                                    LIMIT ${page},8`
+                db.query(sql, (err, result) => {
+                    if (err) res.status(500).send({ err, message: 'error get product search' })
+                    return res.send(result)
+                })
+            } else if (sortprice == 0) {
+                console.log('masuj sortprice desc 436')
+                var sql = `  select p.*,c.idcategory as idcat,c.name as catname,a.*, f.* from products p 
+                                join categories c on p.idcategory=c.idcategory
+                                join authors a on p.author_id=a.author_id
+                                join booksformat f on p.format_id=f.format_id
+                                where p.isdeleted=0 order by p.price desc
+                                LIMIT ${page},8`
+                db.query(sql, (err, result) => {
+                    if (err) res.status(500).send({ err, message: 'error get product search' })
+                    return res.send(result)
+                })
+            } else {
+                var sql = `  select p.*,c.idcategory as idcat,c.name as catname,a.*, f.* from products p 
+                                 join categories c on p.idcategory=c.idcategory
+                                 join authors a on p.author_id=a.author_id
+                                 join booksformat f on p.format_id=f.format_id
+                                 where p.isdeleted=0
+                                LIMIT ${page},8`
+                db.query(sql, (err, result) => {
+                    if (err) res.status(500).send({ err, message: 'error get total product' })
+                    return res.send(result)
+                })
+            }
+
+        }
     },
 
     // getTotalProduct:(req,res)=>{
@@ -1647,10 +1738,11 @@ module.exports = {
         console.log(req.params)
         const {id}=req.params
         // const offset = parseInt((page-1)*8)
-            var sql= `select p.*,c.idcategory as idcat,c.name as catname,a.*, f.* from products p 
+            var sql= `select p.*,c.idcategory as idcat,c.name as catname, d.discount_rate, a.*, f.* from products p 
                         join categories c on p.idcategory=c.idcategory
                         join authors a on p.author_id=a.author_id
                         join booksformat f on p.format_id=f.format_id
+                        left join discounts d on p.discount_id=d.discount_id
                         where p.isdeleted=0 and idproduct=${id}`
             db.query(sql,(err,result)=>{
                 if(err) res.status(500).send({err,message:'error get detail product'})

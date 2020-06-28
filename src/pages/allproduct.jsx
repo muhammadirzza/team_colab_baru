@@ -138,11 +138,13 @@ class Home extends Component {
 
     onCategoryClick=(e)=>{
         var filter=e.target.value
+        this.min.value=''
+        this.max.value=''
         this.setState({page:0,activecategory:filter,kategoriprod:filter})
         this.renderKategori()
         // console.log(filter)
-        this.getData(this.state.inputmin, this.state.inputmax,filter, this.state.sortname, this.state.sortprice)
-      
+        this.getData(null, null,filter, this.state.sortname, this.state.sortprice)
+        // this.getData(this.state.inputmin, this.state.inputmax,filter, this.state.sortname, this.state.sortprice)      
     }
 
     onnextClick = (tes) => {
@@ -173,17 +175,38 @@ class Home extends Component {
                             </div>
                             <div className="display-block ribbon-image-discount">
                                 <div className="ribbon-image-box-discount">
-                                    <div className="ribbon-image-price-promobox">
-                                        <p className="ribbon-image-price-disc">
+                                    {
+                                        val.discount_rate === null
+                                        ?
+                                        <div className="ribbon-image-price-promobox">
+                                            <p className="ribbon-image-price-normal">
+                                                {changetoRupiah(val.price)},00
+                                            </p>
+                                            <span className="ribbon-image-normal-percent">
+                                                {val.discount_rate}
+                                            </span>
+                                        </div>
+                                        :
+                                        <div className="ribbon-image-price-promobox">
+                                            <p className="ribbon-image-price-disc">
+                                                {changetoRupiah(val.price)},00
+                                            </p>
+                                            <span className="ribbon-image-price-percent">
+                                                {val.discount_rate}%
+                                            </span>
+                                        </div>
+                                    }
+                                    {
+                                        val.discount_rate === null
+                                        ?
+                                        <div className="ribbon-image-price-get-discount">
                                             {changetoRupiah(val.price)},00
-                                        </p>
-                                        <span className="ribbon-image-price-percent">
-                                            15%
-                                        </span>
-                                    </div>
-                                    <div className="ribbon-image-price-get-discount">
-                                        {changetoRupiah(val.price)},00
-                                    </div>
+                                        </div>
+                                        :
+                                        <div className="ribbon-image-price-get-discount">
+                                            {changetoRupiah(val.price - (val.discount_rate * val.price / 100))},00
+                                        </div>
+                                    }
                                 </div>
                             </div>
                         </div>

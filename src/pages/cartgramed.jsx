@@ -64,7 +64,11 @@ class Cart extends Component {
     renderTotal=()=>{
         let total=0
         this.state.isicart.forEach((val)=>{
-            total+=val.qty*val.price
+            if (val.discount_rate) {
+                total+=(val.price - (val.discount_rate * val.price / 100)) * val.qty               
+            } else {
+                total+=val.qty*val.price
+            }
         })
         return(
             total
@@ -76,7 +80,7 @@ class Cart extends Component {
     }
 
     totalPrice=()=>{
-        return this.renderTotal() - this.state.discount
+        return this.renderTotal()
     }
 
     getdata=()=>{
@@ -234,7 +238,7 @@ class Cart extends Component {
                                     </div>
                                     <div style={{flex:1, textAlign:'right', verticalAlign:'middle'}}>{ changetoRupiah(this.renderTotal()) }</div>
                                 </div>
-                                <div style={{display:'flex', width:'100%'}}>
+                                {/* <div style={{display:'flex', width:'100%'}}>
                                     <div style={{verticalAlign:'middle'}}>
                                         <p style={{color:'#281e5a', fontSize:'15px', fontWeight:'bolder'}}>Discount</p>
                                     </div>
@@ -248,7 +252,7 @@ class Cart extends Component {
                                 </div>
                                 <div style={{display:'flex', width:'100%'}}>
                                     <div style={{flex:1, textAlign:'right', verticalAlign:'middle'}}>{changetoRupiah(this.state.shipping)}</div>
-                                </div>
+                                </div> */}
                             </div>
                             <div style={{display:'flex', width:'100%', borderTop:'1px solid #281e5a', paddingTop:'10px'}}>
                                 <div style={{verticalAlign:'middle'}}>

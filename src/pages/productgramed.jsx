@@ -29,7 +29,7 @@ const ProductGramed = (props) => {
     const [loading, setloading]=useState(true)
     // const [price, setprice] = useState(0)
 
-    const {name, image, seen, stock, price, description, author}=data
+    const {name, image, discount_rate, stock, price, description, author}=data
 
     useEffect(()=>{
         console.log(props.match.params.idprod)
@@ -206,9 +206,17 @@ const ProductGramed = (props) => {
                                     </div>
                                     <div>
                                     <div className=" d-flex pt-3" style={{alignItems:"center", justifyContent:'center'}}>
-                                        <p style={{fontSize:'18px', fontWeight:'bold'}}>
-                                            {changetoRupiah(price*qty)},00
-                                        </p>
+                                        {
+                                            discount_rate
+                                            ?
+                                            <p style={{fontSize:'18px', fontWeight:'bold'}}>
+                                                {changetoRupiah((price - (discount_rate * price / 100))*qty)},00
+                                            </p>
+                                            :
+                                            <p style={{fontSize:'18px', fontWeight:'bold'}}>
+                                                {changetoRupiah(price*qty)},00
+                                            </p>
+                                        }
                                     </div>
                                     </div>
                                 </div>
@@ -236,11 +244,24 @@ const ProductGramed = (props) => {
                                                 <div style={{flex:1, textAlign:'right', verticalAlign:'middle'}}><FaInfoCircle/></div>
                                             </div>
                                             <div>
-                                                <p>20%</p>
+                                                {
+                                                    discount_rate
+                                                    ?
+                                                    <p>{discount_rate}%</p>
+                                                    :null
+                                                }
                                             </div>
-                                            <div>
-                                                <p>{changetoRupiah(price*qty)},00</p>
-                                            </div>
+                                                {
+                                                    discount_rate?
+                                                    <div>
+                                                        <p className="ribbon-image-price-disc">{changetoRupiah(price)},00</p>
+                                                        <p>{changetoRupiah(price - (discount_rate * price / 100))},00</p>
+                                                    </div>
+                                                    :
+                                                    <div>
+                                                        <p>{changetoRupiah(price)},00</p>
+                                                    </div>
+                                                }
                                         </div>
                                     </div>
                                     <div className="box-button" >

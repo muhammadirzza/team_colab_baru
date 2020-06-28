@@ -2,25 +2,23 @@ import React, { Component } from 'react';
 import './home.css'
 import { MDBCarousel, MDBCarouselInner, MDBCarouselItem, MDBView, MDBContainer } from
     "mdbreact";
-import { Link, Redirect } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import Axios from 'axios';
 import { APIURL } from '../support/ApiUrl';
 import { connect } from 'react-redux';
 import { signOut, searchbuku } from '../redux/actions'
 import { changetoRupiah } from '../support/changetorupiah';
-import { capitalfirst, capitalize } from '../support/sentencecase'
+import { capitalize } from '../support/sentencecase'
+import Footer from '../component/footer';
 // import {Redirect} from 'react-router-dom';
 
 
 class Home extends Component {
     state = {
-        products: [],
         bukuterpopuler: [],
         novelpalinglaris: [],
         komikpilihan: [],
-        categories: [],
         discounts: [],
-        search: undefined,
         loading: true
     }
 
@@ -28,64 +26,21 @@ class Home extends Component {
         Axios.get(`${APIURL}/product/getprod`)
             .then((res) => {
                 console.log(res.data)
-                this.setState({ categories: res.data.category, products: res.data.product, discounts: res.data.discount })
-                Axios.get(`${APIURL}/product/discount`)
-                    .then((resdiskon) => {
-                        console.log(resdiskon.data)
-                        this.setState({
-                            // discounts: resdiskon.data
-                            // page: parseInt(obj.page)
-                        })
-                        // this.props.SortNama(true)
-                        console.log(this.props.Filter)
-                    }).catch((errallprod) => {
-                        console.log(errallprod)
-                    }).finally(() => {
-                        this.setState({ loading: false })
-                    })
+                this.setState({ discounts: res.data.discount })
             }).catch((err) => {
                 console.log(err)
-
             }).finally(() => {
                 this.setState({ loading: false })
             })
         this.getHomeProducts()
-
-        // this.getData()
-        // // console.log(this.props.location.search)
-        // var obj = querystring.parse(this.props.location.search)
-        // // console.log(obj.page)
-        // this.props.IniHome()
-        // Axios.get(`${APIURL}/product/getproduct?page=${obj.page}`)
-        // .then((res)=>{
-        //     // console.log(res.data)
-        //     // this.setState({searchProducts:res.data})
-        //     // console.log(this.state.products)
-        //     Axios.get(`${APIURL}/product/getallproduct`)
-        //     .then((resallprod)=>{
-        //         // console.log(resallprod.data)
-        //         this.setState({
-        //             products:resallprod.data, 
-        //             searchProducts:res.data,
-        //             page:parseInt(obj.page)
-        //         })
-        //     }).catch((errallprod)=>{
-        //         console.log(errallprod)
-        //     }).finally(()=>{
-        //         this.setState({loading:false})
-        //     })
-        // }).catch((err)=>{
-        //     console.log(err)
-        // }).finally(()=>{
-        //     this.setState({loading:false})
-        // })
     }
 
     getHomeProducts = () => {
         Axios.get(`${APIURL}/product/producthome`)
             .then((res) => {
-                console.log(res.data.komik)
-                this.setState({ novelpalinglaris: res.data.novel, komikpilihan: res.data.komik })
+                console.log(res.data)
+                console.log(res.data.populer)
+                this.setState({ novelpalinglaris: res.data.novel, komikpilihan: res.data.komik, bukuterpopuler: res.data.populer })
             })
             .catch((err) => {
                 console.log(err)
@@ -171,18 +126,16 @@ class Home extends Component {
         })
     }
 
-    renderdiscounttoadd = () => {
-        return this.state.discounts.map((val, index) => {
-            return <option key={index} value={val.discount_id}>{val.type}</option>
-        })
-    }
-
     render() {
         const { komikpilihan, novelpalinglaris, bukuterpopuler } = this.state
         return (
             <div className="home-container">
                 <div className="inner-home-container">
-                    <div className="home-banner">Lihat Semua</div>
+                    <div className="home-banner">
+                        <Link className="red-text" to={'/allproduct'}>
+                            Lihat Semua
+                        </Link>
+                    </div>
                     <div className="promo-carousel">
                         <div>
                             <MDBContainer >
@@ -193,113 +146,40 @@ class Home extends Component {
                                     showIndicators={true}
                                     className="z-depth-1 banner-main"
                                 >
-                                    {this.renderbannerdiskon()}
-                                    {/* <MDBCarouselInner>
-                                        <MDBCarouselItem itemId="1">
-                                            <MDBView>
-                                                <img
-                                                    className=""
-                                                    src="https://cdn.gramedia.com/uploads/marketing/promo_detail_banner_XntzXQK.png"
-                                                    alt="First slide"
-                                                />
-                                            </MDBView>
-                                        </MDBCarouselItem>
-                                        <MDBCarouselItem itemId="2">
-                                            <MDBView>
-                                                <img
-                                                    className=""
-                                                    src="https://cdn.gramedia.com/uploads/marketing/promo_personality_quiz_thr_storefront.jpg"
-                                                    alt="Second slide"
-                                                />
-                                            </MDBView>
-                                        </MDBCarouselItem>
-                                        <MDBCarouselItem itemId="3">
-                                            <MDBView>
-                                                <img
-                                                    className=""
-                                                    src="https://cdn.gramedia.com/uploads/marketing/myvalue_storefront.jpg"
-                                                    alt="Third slide"
-                                                />
-                                            </MDBView>
-                                        </MDBCarouselItem>
-                                    </MDBCarouselInner> */}
+                                    <MDBCarouselInner>
+                                        {this.renderbannerdiskon()}
+                                    </MDBCarouselInner>
                                 </MDBCarousel>
                             </MDBContainer>
                         </div>
                         <div className="banner-small">
-                            {/* {console.log(this.state.discounts[0].discount_id)} */}
                             <Link to={`/diskonprod/${3}`}>
                                 <div>
-                                    <img src="https://cdn.gramedia.com/uploads/marketing/socmed_storefront_SCl42PY.png" alt="" />
+                                    <img src="https://cdn.gramedia.com/uploads/marketing/1._Sosmed_Online_Bookfair_bca_storefront__wauto_h164.png" alt="" />
                                 </div>
                             </Link>
-                            <Link to={`/diskonprod/2`}>
+                            <Link to={`/diskonprod/${2}`}>
                                 <div>
-                                    <img src="https://cdn.gramedia.com/uploads/marketing/Promo_Detail_Banner-Hanya_3_Hari_BIP_Mei_2020.jpg" alt="" />
+                                    <img src="https://cdn.gramedia.com/uploads/marketing/kgx__wauto_h164.png" alt="" />
                                 </div>
                             </Link>
                         </div>
                     </div>
                     <div className="category">
-                        <div className="isi-category">
-                            <div className="wrap-icon">
-                                <div className="icon-menu">
-                                    <div className="icon-content">
-                                        <Link to='/allproduct'>
-                                            <img src="https://cdn.gramedia.com/uploads/highlighted_menu/1._buku_baru__w100_hauto.png" alt="Buku Baru" />
-                                            <p className="icon-title">Buku Baru</p>
-                                        </Link>
-                                    </div>
-                                </div>
+                        <Link to={'/allproduct'}>
+                            <div className="isi-category">
+                                <a>
+                                    <img src="https://cdn.gramedia.com/uploads/marketing/disc_hingga_90_aX9GsbO__wauto_h336.png" />
+                                </a>
                             </div>
-                            <div className="wrap-icon">
-                                <div className="icon-menu">
-                                    <div className="icon-content">
-                                        <img src="https://cdn.gramedia.com/uploads/highlighted_menu/10._National_Best_Seller_ee50uDG__w100_hauto.png" alt="Buku Pilihan" />
-                                        <p className="icon-title">Buku Pilihan</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="wrap-icon">
-                                <div className="icon-menu">
-                                    <div className="icon-content">
-                                        <img src="https://cdn.gramedia.com/uploads/highlighted_menu/3._buku_pilihan_ZuXD6jG__w100_hauto.png" alt="Buku Import" />
-                                        <p className="icon-title">Buku Import</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="wrap-icon">
-                                <div className="icon-menu">
-                                    <div className="icon-content">
-                                        <img src="https://cdn.gramedia.com/uploads/highlighted_menu/icon-store-800px__w100_hauto.png" alt="Toko Offline" />
-                                        <p className="icon-title">Toko Offline</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="wrap-icon">
-                                <div className="icon-menu">
-                                    <div className="icon-content">
-                                        <img src="https://cdn.gramedia.com/uploads/highlighted_menu/5._print_on_demaand__w100_hauto.png" alt="Print On Demand" />
-                                        <p className="icon-title">Print On Demand</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="wrap-icon">
-                                <div className="icon-menu">
-                                    <div className="icon-content">
-                                        <img src="https://cdn.gramedia.com/uploads/highlighted_menu/9._Harga_Spesial__w100_hauto.png" alt="Harga Spesial" />
-                                        <p className="icon-title">Harga Spesial</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        </Link>
                     </div>
 
                     <div className="detail-category">
                         <div className="inner-category-container">
                             <div className="top">
-                                <h2 className="with-banner">Komik-Komik Pilihan</h2>
-                                <a className="with-banner">Lihat Semua</a>
+                                <h2 className="with-banner">Buku-Buku Terpoluler</h2>
+                                <Link className="red-text" to="/allproduct"><a className="with-banner">Lihat Semua</a></Link>
                             </div>
                             <div className="home-category-container">
                                 <div className="banner-section">
@@ -312,7 +192,7 @@ class Home extends Component {
                                         <div className="carousel-container">
                                             <div className="viewport">
                                                 {/* item render */}
-                                                {this.renderCategory(komikpilihan)}
+                                                {this.renderCategory(bukuterpopuler)}
                                             </div>
                                         </div>
                                     </div>
@@ -325,7 +205,7 @@ class Home extends Component {
                         <div className="inner-category-container">
                             <div className="top">
                                 <h2 className="with-banner">Novel Paling Laris</h2>
-                                <a className="with-banner">Lihat Semua</a>
+                                <Link className="red-text" to="/allproduct"><a className="with-banner">Lihat Semua</a></Link>
                             </div>
                             <div className="home-category-container">
                                 <div className="banner-section">
@@ -350,8 +230,8 @@ class Home extends Component {
                     <div className="detail-category">
                         <div className="inner-category-container">
                             <div className="top">
-                                <h2 className="with-banner">Buku-Buku Terpopuler</h2>
-                                <a className="with-banner">Lihat Semua</a>
+                                <h2 className="with-banner">Komik-Komik Pilihan</h2>
+                                <Link className="red-text" to="/allproduct"><a className="with-banner">Lihat Semua</a></Link>
                             </div>
                             <div className="home-category-container">
                                 <div className="banner-section">
@@ -364,7 +244,7 @@ class Home extends Component {
                                         <div className="carousel-container">
                                             <div className="viewport">
                                                 {/* item render */}
-                                                {this.renderCategory(bukuterpopuler)}
+                                                {this.renderCategory(komikpilihan)}
                                             </div>
                                         </div>
                                     </div>
@@ -374,6 +254,7 @@ class Home extends Component {
                     </div>
 
                 </div>
+                <Footer/>
             </div>
         );
     }

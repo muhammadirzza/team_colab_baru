@@ -30,6 +30,9 @@ import Changepassword from './pages/resetpassworduser'
 import SearchProduct from './pages/search';
 // import Detailproduk from './pages/productgramed'
 import DiscProduct from './pages/discountproduct'
+import Alltransaction from './pages/managetransaction'
+import Report from './pages/report'
+
 
 class App extends Component {
   state = {
@@ -99,7 +102,6 @@ class App extends Component {
       <Header />
       <Switch>
         <Route exact path="/" component={Home} />
-        {/* <Route path='/allproducts' exact component={Allproducts}/> */}
         <Route exact path="/login" component={Login} />
         <Route path="/profile" exact component={Profile} />
         <Route exact path="/login" component={Login} />
@@ -110,8 +112,6 @@ class App extends Component {
         <Route exact path='/manageadmin' component={ManageAdmin} />
         <Route exact path='/managediskon' component={ManageDiskon} />
         <Route exact path='/filterprod/:idfilter' component={FilterProduct} />
-        {/* <Route exact path='/filterdiscprod' component={DiscProduct} /> */}
-        {/* <Route exact path='/filterprod' component={FilterProduct} /> */}
         <Route exact path='/allproduct' component={Allproduct} />
         <Route exact path='/searchproduct' component={SearchProduct} />
         <Route exact path='/detailprod/:idprod' component={Detailproduk} />
@@ -120,6 +120,11 @@ class App extends Component {
         <Route exact path='/history' component={Userhistory} />
         <Route exact path='/changepassword/:id' component={Changepassword} />
         <Route exact path='/diskonprod/:iddisc' component={DiscProduct} />
+        <Route exact path='/alltransaction' component={Alltransaction} />
+        <Route exact path='/report' component={Report} />
+        {/* <Route path='/allproducts' exact component={Allproducts}/> */}
+        {/* <Route exact path='/filterdiscprod' component={DiscProduct} /> */}
+        {/* <Route exact path='/filterprod' component={FilterProduct} /> */}
         {/* <Route exact path={"/home"} component={Home} /> */}
         {/* <Route exact path={"/register"} component={Register} /> */}
         {/* <Route exact path='/settings' component={UserSetting} /> */}

@@ -81,13 +81,13 @@ class ManageAdmin extends Component {
             this.setState({ jumlahProducts: res.data.total })
             Axios.get(
                 sortname!==null || sortprice!==null ?
-                    min || max ? `${APIURL}/product/getproductuser?inputMin=${min}&inputMax=${max}&page=${this.state.page}&sortname=${sortname}&sortprice=${sortprice}` : nama ? `${APIURL}/product/getproductuser?inputNama=${nama}&page=${this.state.page}&sortname=${sortname}&sortprice=${sortprice}` :
-                        cat ? `${APIURL}/product/getproductuser?cat=${cat}&page=${this.state.page}&sortname=${sortname}&sortprice=${sortprice}` : disc ? `${APIURL}/product/getproductuser?disc=${disc}&page=${this.state.page}&sortname=${sortname}&sortprice=${sortprice}` :
-                            `${APIURL}/product/getproductuser?page=${this.state.page}&sortname=${sortname}&sortprice=${sortprice}`
+                    min || max ? `${APIURL}/product/getproductadmin?inputMin=${min}&inputMax=${max}&page=${this.state.page}&sortname=${sortname}&sortprice=${sortprice}` : nama ? `${APIURL}/product/getproductadmin?inputNama=${nama}&page=${this.state.page}&sortname=${sortname}&sortprice=${sortprice}` :
+                        cat ? `${APIURL}/product/getproductadmin?cat=${cat}&page=${this.state.page}&sortname=${sortname}&sortprice=${sortprice}` : disc ? `${APIURL}/product/getproductadmin?disc=${disc}&page=${this.state.page}&sortname=${sortname}&sortprice=${sortprice}` :
+                            `${APIURL}/product/getproductadmin?page=${this.state.page}&sortname=${sortname}&sortprice=${sortprice}`
                     :
-                    min || max ? `${APIURL}/product/getproductuser?inputMin=${min}&inputMax=${max}&page=${this.state.page}` : nama ? `${APIURL}/product/getproductuser?inputNama=${nama}&page=${this.state.page}` :
-                        cat ? `${APIURL}/product/getproductuser?cat=${cat}&page=${this.state.page}` : disc ? `${APIURL}/product/getproductuser?disc=${disc}&page=${this.state.page}` :
-                            `${APIURL}/product/getproductuser?page=${this.state.page}`
+                    min || max ? `${APIURL}/product/getproductadmin?inputMin=${min}&inputMax=${max}&page=${this.state.page}` : nama ? `${APIURL}/product/getproductadmin?inputNama=${nama}&page=${this.state.page}` :
+                        cat ? `${APIURL}/product/getproductadmin?cat=${cat}&page=${this.state.page}` : disc ? `${APIURL}/product/getproductadmin?disc=${disc}&page=${this.state.page}` :
+                            `${APIURL}/product/getproductadmin?page=${this.state.page}`
             ).then((res1) => {
                 console.log(res1.data, 'line 92')
                 this.setState({ searchProducts: res1.data, indexedit: 0 })

@@ -141,7 +141,7 @@ export const userverified=(data)=>{
 
 export const signOut=()=>{
     return{
-        type:'ERROR'
+        type:'LOGOUT'
     }
 }
 

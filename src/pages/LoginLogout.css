@@ -322,7 +322,7 @@ input {
 }
 
 .box-info {
-	height:120px; 
+	height:140px; 
 	width:100%; 
 	/* border:'1px solid blue';  */
 	border-radius:10px; 
@@ -366,6 +366,30 @@ input {
 	border-radius: 5px;
 	text-align: center;
 	padding: 0px;
+}
+
+.buttonconfirm {
+	background-color: #281e5a;
+	color: white;
+	width: 50%;
+	height: 40px;
+	border: none;
+	border-radius: 5px;
+	text-align: center;
+	padding: 0px;
+	margin-right: 1px;
+}
+
+.buttoncancel {
+	background-color: #FF4B2B;
+	color: white;
+	width: 50%;
+	height: 40px;
+	border: none;
+	border-radius: 5px;
+	text-align: center;
+	padding: 0px;
+	margin-right: 1px;
 }
 
 .buttonresetpass {

@@ -26,6 +26,7 @@ class Cart extends Component {
         courierservice:[],
         totalweight:0,
         shippingfee:0,
+        discount:0,
         totalpay:0,
         isUploadPay:false,
         minutes:0,
@@ -256,9 +257,24 @@ class Cart extends Component {
                     <td>{capitalize(val.name)}</td>
                     {/* <td className='text-center'><img src={APIURL+val.image} height='100' alt=''></img></td> */}
                     <td className='text-center' >{capitalize(val.author)}</td>
-                    <td className='text-center' style={{width:'50%'}}>{changetoRupiah(val.price)}</td>
+                    <td className='text-center' style={{width:'50%'}}>
+                        {
+                            val.discount_rate ?
+                            changetoRupiah((val.price - (val.discount_rate * val.price / 100)))
+                            :
+                            changetoRupiah(val.price)
+                        }
+                    </td>
                     <td>{val.qty}</td>
-                    <td className='text-center' style={{width:'50%'}}>{changetoRupiah(val.price*val.qty)}</td>
+                    <td className='text-center' style={{width:'50%'}}>
+                        {
+                            val.discount_rate ?
+                            changetoRupiah((val.price - (val.discount_rate * val.price / 100))*val.qty) 
+                            :
+                            changetoRupiah(val.price*val.qty)
+                        }
+                    
+                    </td>
                 </tr>
             )
         })
@@ -267,38 +283,53 @@ class Cart extends Component {
     renderTotalpay = () => {
         var total=0
         this.state.isicart.forEach((val)=>{
-            var output= val.price*val.qty
+            if (val.discount_rate) {
+                var output=(val.price - (val.discount_rate * val.price / 100)) * val.qty               
+            } else {
+                var output=val.qty*val.price
+            }
             total+=output
         })
         return(
-            total+this.state.shippingfee
+            total + this.state.shippingfee - this.state.discount
         ) 
     }
 
     rendertotalcart =()=>{
         var total=0
         this.state.isicart.forEach((val)=>{
-            var output= val.price*val.qty
+            // var output= val.price*val.qty
+            if (val.discount_rate) {
+                var output=(val.price - (val.discount_rate * val.price / 100)) * val.qty               
+            } else {
+                var output=val.qty*val.price
+            }
             total+=output
         })
         console.log(total)
         // this.setState({})
         
         return (
-            <div className='text-right mb-3 col-md-8 float-right'>
+            <div className='text-right mb-3 col-md-7 float-right'>
                 <div className="row m-0 p-0 justify-content-end">
                     <div className="col-md-5 p-0">Total Product</div>
                     <div className="col-md-5 p-0">{changetoRupiah(total)}</div>
                 </div>
                 <div className="row m-0 p-0 justify-content-end">
                     <div className="col-md-5 p-0">Shipping fee</div>
-                    <div className="col-md-5 p-0">{this.state.shippingfee}</div>
+                    <div className="col-md-5 p-0">{changetoRupiah(this.state.shippingfee)}</div>
                 </div> 
-                <div className="row m-0 p-0 justify-content-end red-text">
-                    <div className="col-md-5 p-0">Discount</div>
-                    <div className="col-md-5 p-0">-0</div>
-                </div>
-                <div className="row m-0 p-0 justify-content-end">
+                    {
+                        this.state.discount
+                        ?
+                        <div className="row m-0 p-0 justify-content-end red-text">
+                            <div className="col-md-5 p-0">Discount</div>
+                            <div className="col-md-5 p-0">-0</div>
+                        </div>
+                        :
+                        null
+                    }
+                <div className="row m-0 p-0 justify-content-end" style={{borderTop:'1px solid black'}}>
                     <div className="col-md-5 p-0">Total Payment</div>
                     <div className="col-md-5 p-0">{changetoRupiah(total+this.state.shippingfee)}</div>
                 </div> 
@@ -364,7 +395,7 @@ class Cart extends Component {
                     }).then(()=>{
                         clearInterval(this.interval)
                         this.setState({minutes:0, seconds:30, isUploadPay:false})
-                        // window.location.href='/'
+                        window.location.href='/'
                     })
                 }
                 // setdata(res.data)

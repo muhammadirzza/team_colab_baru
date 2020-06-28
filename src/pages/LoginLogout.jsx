@@ -53,6 +53,7 @@ class LoginLogout extends Component{
         }
         console.log(obj)
         this.props.LoginUser(obj)
+        setTimeout(function() {window.location.reload()},100)
     }
     
     render() {
